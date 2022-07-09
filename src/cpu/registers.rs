@@ -10,6 +10,20 @@ pub struct Registers {
 }
 
 impl Registers {
+    pub fn new(reg: &Vec<u8>) -> Self {
+        if reg.len() != 8 {panic!()}
+
+        Registers {
+            a: reg[0],
+            b: reg[1],
+            c: reg[2],
+            d: reg[3],
+            e: reg[4],
+            f: reg[5],
+            h: reg[6],
+            l: reg[7]
+        }
+    }
     fn get_bc(&self) -> u16 {
         // pushes the 8 digits of b to the last 8 significant digits, and using
         // a bitwise OR operator, adds c as the first 8 digits
