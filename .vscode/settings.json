@@ -1,0 +1,5 @@
+{
+  "editor.tabSize": 4,
+  "editor.defaultFormatter": "rust-lang.rust",
+  "files.eol": "\r\n"
+}
