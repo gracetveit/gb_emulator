@@ -46,9 +46,15 @@ impl CPU {
                     let new_value = self.add(value);
                     self.registers.a = new_value;
                 }
-
-                // _ => { /* TODO: Support more targets */ }
             },
+            Instruction::ADDHL(target) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    let new_value = self.addhl(value);
+                    self.registers.set_hl(new_value);
+                }
+                _ => {/* TODO: Add more targets */}
+            }
             _ => { /* TODO: Support more Instructions */ }
         }
     }
@@ -63,6 +69,15 @@ impl CPU {
         // together result in a value bigger than 0xF (16). If the result is larger than 0xF
         // then the addition caused a carry from the lower nibble to the upper nibble
         self.registers.f.half_carry = (self.registers.a & 0xF) + (value & 0xF) > 0xF;
+        new_value
+    }
+
+    fn addhl(&mut self, value: u8) -> u16 {
+        let (new_value, did_overflow) = self.registers.get_hl().overflowing_add(value as u16);
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.carry = did_overflow;
+        self.registers.f.half_carry = (self.registers.get_hl() & 0xF) + (value as u16 & 0xF) > 0xF;
         new_value
     }
 }
