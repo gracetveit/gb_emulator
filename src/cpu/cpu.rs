@@ -1,19 +1,53 @@
-use super::{instruction::{ArithmeticTarget, Instruction}, registers::Registers};
+use super::{
+    instruction::{ArithmeticTarget, Instruction},
+    registers::Registers,
+};
 
 pub struct CPU {
-    registers: Registers
+    pub registers: Registers,
 }
 
 impl CPU {
-    fn execute(&mut self, instruction: Instruction) {
+    pub fn execute(&mut self, instruction: Instruction) {
         match instruction {
             Instruction::ADD(target) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    let new_value = self.add(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    let new_value = self.add(value);
+                    self.registers.a = new_value;
+                }
                 ArithmeticTarget::C => {
                     let value = self.registers.c;
                     let new_value = self.add(value);
                     self.registers.a = new_value;
                 }
-                _ => { /* TODO: Support more targets */ }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    let new_value = self.add(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    let new_value = self.add(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    let new_value = self.add(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    let new_value = self.add(value);
+                    self.registers.a = new_value;
+                }
+
+                // _ => { /* TODO: Support more targets */ }
             },
             _ => { /* TODO: Support more Instructions */ }
         }
