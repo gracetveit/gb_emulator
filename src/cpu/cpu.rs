@@ -168,6 +168,43 @@ impl CPU {
                 }
                 // _ => {}
             }
+            Instruction::AND(target) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::C => {
+                    let value = self.registers.c;
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                }
+            }
         }
     }
 
@@ -236,5 +273,16 @@ impl CPU {
             true => new_value - 1,
             false => new_value
         }
+    }
+
+    fn and(&mut self, value: u8) -> u8 {
+        let new_value = value & self.registers.a;
+
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = true;
+        self.registers.f.carry = true;
+
+        new_value
     }
 }
