@@ -47,21 +47,20 @@ impl CPU {
                     self.registers.a = new_value;
                 }
             },
-            Instruction::ADDHL(target) => match target {
-                ArithmeticTarget::A => {
-                    let value = self.registers.a;
-                    let new_value = self.addhl(value);
-                    self.registers.set_hl(new_value);
-                }
-                _ => {/* TODO: Add more targets */}
-            }
+            // Instruction::ADDHL(target) => match target {
+            //     ArithmeticTarget::A => {
+            //         let value = self.registers.a;
+            //         let new_value = self.addhl(value);
+            //         self.registers.set_hl(new_value);
+            //     }
+            //     _ => { /* TODO: Add more targets */ }
+            // },
             _ => { /* TODO: Support more Instructions */ }
         }
     }
 
     fn add(&mut self, value: u8) -> u8 {
         let (new_value, did_overflow) = self.registers.a.overflowing_add(value);
-        // TODO: set flags
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
         self.registers.f.carry = did_overflow;
@@ -72,12 +71,21 @@ impl CPU {
         new_value
     }
 
-    fn addhl(&mut self, value: u8) -> u16 {
-        let (new_value, did_overflow) = self.registers.get_hl().overflowing_add(value as u16);
-        self.registers.f.zero = new_value == 0;
-        self.registers.f.subtract = false;
-        self.registers.f.carry = did_overflow;
-        self.registers.f.half_carry = (self.registers.get_hl() & 0xF) + (value as u16 & 0xF) > 0xF;
-        new_value
-    }
+    // fn addhl(&mut self, value: u8) -> u16 {
+    //     /*
+    //     TODO
+
+    //     my code says that the half-carry flag is the result of the 8-bit addition
+    //     of H + (whatever high register) + carry from L + (whatever low register)
+
+    //     so basically, do the low addition to get the carry, then treat the high
+    //     addition as a regular ADC
+    //     */
+    //     let (new_value, did_overflow) = self.registers.get_hl().overflowing_add(value as u16);
+    //     self.registers.f.zero = new_value == 0;
+    //     self.registers.f.subtract = false;
+    //     self.registers.f.carry = did_overflow;
+    //     self.registers.f.half_carry = (self.registers.get_hl() & 0xF) + (value as u16 & 0xF) > 0xF;
+    //     new_value
+    // }
 }
