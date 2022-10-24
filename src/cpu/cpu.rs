@@ -380,6 +380,11 @@ impl CPU {
                     let new_value = self.dec(value);
                     self.registers.l = new_value;
                 }
+            },
+            Instruction::CCF => {
+                self.registers.f.subtract = false;
+                self.registers.f.half_carry = false;
+                self.registers.f.carry = !self.registers.f.carry;
             }
         }
     }
