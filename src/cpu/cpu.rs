@@ -279,6 +279,36 @@ impl CPU {
                     self.registers.a = new_value;
                 }
             }
+            Instruction::CP(target) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    self.sub(value);
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    self.sub(value);
+                }
+                ArithmeticTarget::C => {
+                    let value = self.registers.c;
+                    self.sub(value);
+                }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    self.sub(value);
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    self.sub(value);
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    self.sub(value);
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    self.sub(value);
+                }
+            }
         }
     }
 
