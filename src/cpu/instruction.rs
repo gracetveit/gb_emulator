@@ -11,7 +11,7 @@ pub enum Instruction {
     XOR(ArithmeticTarget),
     CP(ArithmeticTarget),
     INC(ArithmeticTarget),
-    // DEC
+    DEC(ArithmeticTarget),
     // CCF
     // SCF
     // RRA
