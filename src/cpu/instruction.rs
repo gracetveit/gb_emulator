@@ -9,8 +9,8 @@ pub enum Instruction {
     AND(ArithmeticTarget),
     OR(ArithmeticTarget),
     XOR(ArithmeticTarget),
-    CP(ArithmeticTarget)
-    // INC
+    CP(ArithmeticTarget),
+    INC(ArithmeticTarget),
     // DEC
     // CCF
     // SCF

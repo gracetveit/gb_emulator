@@ -127,9 +127,8 @@ impl CPU {
                     let value = self.registers.l;
                     let new_value = self.sub(value);
                     self.registers.a = new_value;
-                }
-                // _ => {}
-            }
+                } // _ => {}
+            },
             Instruction::SBC(target) => match target {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
@@ -165,9 +164,8 @@ impl CPU {
                     let value = self.registers.l;
                     let new_value = self.sbc(value);
                     self.registers.a = new_value;
-                }
-                // _ => {}
-            }
+                } // _ => {}
+            },
             Instruction::AND(target) => match target {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
@@ -204,7 +202,7 @@ impl CPU {
                     let new_value = self.and(value);
                     self.registers.a = new_value;
                 }
-            }
+            },
             Instruction::OR(target) => match target {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
@@ -241,7 +239,7 @@ impl CPU {
                     let new_value = self.or(value);
                     self.registers.a = new_value;
                 }
-            }
+            },
             Instruction::XOR(target) => match target {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
@@ -278,7 +276,7 @@ impl CPU {
                     let new_value = self.xor(value, false);
                     self.registers.a = new_value;
                 }
-            }
+            },
             Instruction::CP(target) => match target {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
@@ -308,7 +306,44 @@ impl CPU {
                     let value = self.registers.l;
                     self.sub(value);
                 }
-            }
+            },
+            Instruction::INC(target) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    let new_value = self.inc(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    let new_value = self.inc(value);
+                    self.registers.b = new_value;
+                }
+                ArithmeticTarget::C => {
+                    let value = self.registers.c;
+                    let new_value = self.inc(value);
+                    self.registers.c = new_value;
+                }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    let new_value = self.inc(value);
+                    self.registers.d = new_value;
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    let new_value = self.inc(value);
+                    self.registers.e = new_value;
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    let new_value = self.inc(value);
+                    self.registers.h = new_value;
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    let new_value = self.inc(value);
+                    self.registers.l = new_value;
+                }
+            },
         }
     }
 
@@ -375,7 +410,7 @@ impl CPU {
 
         match self.registers.f.carry {
             true => new_value - 1,
-            false => new_value
+            false => new_value,
         }
     }
 
@@ -408,6 +443,18 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = false;
+
+        new_value
+    }
+
+    fn inc(&mut self, value: u8) -> u8 {
+        // Does not set the carry flag, so overflowing add does not need to
+        // record info
+        let (new_value, _) = value.overflowing_add(1);
+
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = (self.registers.a & 0xF) + (value & 0xF) > 0xF;
 
         new_value
     }
