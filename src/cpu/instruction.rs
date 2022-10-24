@@ -8,7 +8,7 @@ pub enum Instruction {
     SBC(ArithmeticTarget),
     AND(ArithmeticTarget),
     OR(ArithmeticTarget),
-    // XOR
+    XOR(ArithmeticTarget)
     // CP
     // INC
     // DEC
