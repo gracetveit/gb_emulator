@@ -391,6 +391,14 @@ impl CPU {
                 self.registers.f.half_carry = false;
                 self.registers.f.carry = true;
             }
+            Instruction::RRA => {
+                let carry_value:u8 = match self.registers.f.carry {
+                    true => 0x80,
+                    false => 0x0
+                };
+                self.registers.f.carry = (self.registers.a >> 7) & 1 == 1;
+                self.registers.a = (self.registers.a >> 1) | carry_value;
+            }
         }
     }
 

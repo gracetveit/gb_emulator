@@ -21,3 +21,32 @@ fn test_add(){
 
     assert_eq!(test_cpu.registers.a, 1)
 }
+
+#[test]
+fn test_rra(){
+    let test_registers = Registers {
+        a: 0b000010110,
+        b: 0,
+        c: 0,
+        d: 0,
+        e: 0,
+        f: FlagsRegister {
+            zero: false,
+            subtract: false,
+            half_carry: false,
+            carry: true
+        },
+        h: 0,
+        l: 0
+    };
+
+    let mut test_cpu = CPU {
+        registers: test_registers
+    };
+
+    test_cpu.execute(Instruction::RRA);
+
+    assert_eq!(test_cpu.registers.a, 0b10001011);
+    assert_eq!(test_cpu.registers.f.carry, false)
+
+}
