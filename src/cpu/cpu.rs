@@ -386,6 +386,11 @@ impl CPU {
                 self.registers.f.half_carry = false;
                 self.registers.f.carry = !self.registers.f.carry;
             }
+            Instruction::SCF => {
+                self.registers.f.subtract = false;
+                self.registers.f.half_carry = false;
+                self.registers.f.carry = true;
+            }
         }
     }
 

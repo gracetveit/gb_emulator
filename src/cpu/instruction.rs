@@ -13,7 +13,7 @@ pub enum Instruction {
     INC(ArithmeticTarget),
     DEC(ArithmeticTarget),
     CCF,
-    // SCF
+    SCF
     // RRA
     // RLA
     // RRCA
