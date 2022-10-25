@@ -468,6 +468,7 @@ impl CPU {
     }
 
     fn sbc(&mut self, value: u8) -> u8 {
+        // TODO: Fix half carry
         let (new_value, did_overflow) = self.registers.a.overflowing_sub(value);
 
         self.registers.f.zero = new_value == 0;
@@ -487,7 +488,7 @@ impl CPU {
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = true;
-        self.registers.f.carry = true;
+        self.registers.f.carry = false;
 
         new_value
     }
