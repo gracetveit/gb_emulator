@@ -16,8 +16,8 @@ pub enum Instruction {
     SCF,
     RRA,
     RLA,
-    // RRCA
-    // RRLA
+    RRCA,
+    RRLA,
     // CPL
     // BIT
     // RESET

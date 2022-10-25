@@ -81,3 +81,59 @@ fn test_rla() {
     assert_eq!(test_cpu.registers.a, 0b000101111);
     assert_eq!(test_cpu.registers.f.carry, false)
 }
+
+#[test]
+fn test_rrca() {
+    let test_registers = Registers {
+        a: 0b000010111,
+        b: 0,
+        c: 0,
+        d: 0,
+        e: 0,
+        f: FlagsRegister {
+            zero: false,
+            subtract: false,
+            half_carry: false,
+            carry: true,
+        },
+        h: 0,
+        l: 0,
+    };
+
+    let mut test_cpu = CPU {
+        registers: test_registers,
+    };
+
+    test_cpu.execute(Instruction::RRCA);
+
+    assert_eq!(test_cpu.registers.a, 0b000001011);
+    assert_eq!(test_cpu.registers.f.carry, true)
+}
+
+#[test]
+fn test_rrla() {
+    let test_registers = Registers {
+        a: 0b000010111,
+        b: 0,
+        c: 0,
+        d: 0,
+        e: 0,
+        f: FlagsRegister {
+            zero: false,
+            subtract: false,
+            half_carry: false,
+            carry: true,
+        },
+        h: 0,
+        l: 0,
+    };
+
+    let mut test_cpu = CPU {
+        registers: test_registers,
+    };
+
+    test_cpu.execute(Instruction::RRLA);
+
+    assert_eq!(test_cpu.registers.a, 0b000101110);
+    assert_eq!(test_cpu.registers.f.carry, false)
+}

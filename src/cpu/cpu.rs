@@ -393,12 +393,22 @@ impl CPU {
             }
             Instruction::RRA => {
                 let value = self.registers.a;
-                let new_value = self.rr(value, true);
+                let new_value = self.rr(value, true, true);
                 self.registers.a = new_value;
             }
             Instruction::RLA => {
                 let value = self.registers.a;
-                let new_value = self.rl(value, true);
+                let new_value = self.rl(value, true, true);
+                self.registers.a = new_value;
+            }
+            Instruction::RRCA => {
+                let value = self.registers.a;
+                let new_value = self.rr(value, true, false);
+                self.registers.a = new_value;
+            }
+            Instruction::RRLA => {
+                let value = self.registers.a;
+                let new_value = self.rl(value, true, false);
                 self.registers.a = new_value;
             }
         }
@@ -526,12 +536,16 @@ impl CPU {
         new_value
     }
 
-    fn rr(&mut self, value: u8, is_a_register: bool) -> u8 {
+    fn rr(&mut self, value: u8, is_a_register: bool, through_carry: bool) -> u8 {
         let carry_value: u8 = match self.registers.f.carry {
             true => 0x80,
             false => 0x0,
         };
-        let new_value = (value >> 1) | carry_value;
+
+        let new_value = match through_carry {
+            true => (value >> 1) | carry_value,
+            false => value >> 1
+        };
 
         self.registers.f.zero = is_a_register || new_value == 0;
         self.registers.f.subtract = false;
@@ -541,12 +555,15 @@ impl CPU {
         new_value
     }
 
-    fn rl(&mut self, value: u8, is_a_register: bool) -> u8 {
+    fn rl(&mut self, value: u8, is_a_register: bool, through_carry: bool) -> u8 {
         let carry_value: u8 = match self.registers.f.carry {
             true => 1,
             false => 0,
         };
-        let new_value = (value << 1) | carry_value;
+        let new_value = match through_carry{
+            true => (value << 1) | carry_value,
+            false => value << 1
+        };
 
         self.registers.f.zero = !is_a_register || new_value == 0;
         self.registers.f.subtract = false;
