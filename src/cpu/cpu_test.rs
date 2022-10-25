@@ -128,11 +128,7 @@ fn test_inc() {
 
 #[test]
 fn test_dec() {
-    let mut test_cpu = create_cpu(
-        1,
-        0,
-        FlagsRegister::from(0)
-    );
+    let mut test_cpu = create_cpu(1, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::DEC(ArithmeticTarget::A));
 
@@ -142,6 +138,34 @@ fn test_dec() {
     assert_eq!(test_cpu.registers.f.subtract, true);
     assert_eq!(test_cpu.registers.f.half_carry, false);
     assert_eq!(test_cpu.registers.f.carry, false);
+}
+
+#[test]
+fn test_ccf() {
+    let mut test_cpu = create_cpu(0, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::CCF);
+
+    assert_eq!(test_cpu.registers.f.zero, false);
+    assert_eq!(test_cpu.registers.f.subtract, false);
+    assert_eq!(test_cpu.registers.f.half_carry, false);
+    assert_eq!(test_cpu.registers.f.carry, true);
+
+    test_cpu.execute(Instruction::CCF);
+
+    assert_eq!(test_cpu.registers.f.carry, false)
+}
+
+#[test]
+fn test_scf() {
+    let mut test_cpu = create_cpu(0, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::SCF);
+
+    assert_eq!(test_cpu.registers.f.zero, false);
+    assert_eq!(test_cpu.registers.f.subtract, false);
+    assert_eq!(test_cpu.registers.f.half_carry, false);
+    assert_eq!(test_cpu.registers.f.carry, true)
 }
 
 #[test]
