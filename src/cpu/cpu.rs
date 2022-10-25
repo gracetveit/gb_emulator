@@ -392,17 +392,14 @@ impl CPU {
                 self.registers.f.carry = true;
             }
             Instruction::RRA => {
-                let carry_value:u8 = match self.registers.f.carry {
-                    true => 0x80,
-                    false => 0x0
-                };
-
-                self.registers.f.zero = false;
-                self.registers.f.subtract = false;
-                self.registers.f.half_carry = false;
-                self.registers.f.carry = (self.registers.a >> 7) & 1 == 1;
-
-                self.registers.a = (self.registers.a >> 1) | carry_value;
+                let value = self.registers.a;
+                let new_value = self.rr(value, true);
+                self.registers.a = new_value;
+            }
+            Instruction::RLA => {
+                let value = self.registers.a;
+                let new_value = self.rl(value, true);
+                self.registers.a = new_value;
             }
         }
     }
@@ -525,6 +522,36 @@ impl CPU {
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
         self.registers.f.half_carry = ((self.registers.a & 0xF) - (value & 0xF)) & 0x10 == 0x10;
+
+        new_value
+    }
+
+    fn rr(&mut self, value: u8, is_a_register: bool) -> u8 {
+        let carry_value: u8 = match self.registers.f.carry {
+            true => 0x80,
+            false => 0x0,
+        };
+        let new_value = (value >> 1) | carry_value;
+
+        self.registers.f.zero = is_a_register || new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = value & 1 == 1;
+
+        new_value
+    }
+
+    fn rl(&mut self, value: u8, is_a_register: bool) -> u8 {
+        let carry_value: u8 = match self.registers.f.carry {
+            true => 1,
+            false => 0,
+        };
+        let new_value = (value << 1) | carry_value;
+
+        self.registers.f.zero = !is_a_register || new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = (value >> 7) & 1 == 1;
 
         new_value
     }
