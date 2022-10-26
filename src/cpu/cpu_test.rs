@@ -171,7 +171,7 @@ fn test_scf() {
 #[test]
 fn test_rra() {
     let mut test_cpu = create_cpu(
-        0b000010110,
+        0b00010110,
         0,
         FlagsRegister {
             zero: false,
@@ -209,20 +209,20 @@ fn test_rla() {
 #[test]
 fn test_rrca() {
     let mut test_cpu = create_cpu(
-        0b000010111,
+        0b00010111,
         0,
         FlagsRegister {
             zero: false,
             subtract: false,
             half_carry: false,
-            carry: true,
+            carry: false,
         },
     );
 
     test_cpu.execute(Instruction::RRCA);
 
-    assert_eq!(test_cpu.registers.a, 0b000001011);
-    assert_eq!(test_cpu.registers.f.carry, true)
+    assert_eq!(test_cpu.registers.a, 0b10001011, "Testing Rotate of Register A");
+    assert_eq!(test_cpu.registers.f.carry, true, "Testing Bit 0 to Carry Flag")
 }
 
 #[test]
@@ -377,14 +377,14 @@ fn test_rrc() {
     test_cpu.execute(Instruction::RRC(ArithmeticTarget::B));
 
     assert_eq!(
-        test_cpu.registers.b, 0b01000000,
+        test_cpu.registers.b, 0b11000000,
         "Testing Rotate Right Through Carry of Register B"
     );
 
     assert_eq!(
         u8::from(test_cpu.registers.f),
         0b00010000,
-        "Carry flag contains rotated bit"
+        "Carry flag contains Old bit 0"
     )
 }
 
@@ -395,14 +395,14 @@ fn test_rlc() {
     test_cpu.execute(Instruction::RLC(ArithmeticTarget::B));
 
     assert_eq!(
-        test_cpu.registers.b, 0b00000010,
-        "Testing Rotate Right Through Carry of Register B"
+        test_cpu.registers.b, 0b00000011,
+        "Testing Rotate Right of Register B"
     );
 
     assert_eq!(
         u8::from(test_cpu.registers.f),
         0b00010000,
-        "Carry flag contains rotated bit"
+        "Carry flag contains old bit 7"
     )
 }
 

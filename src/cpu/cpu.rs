@@ -403,7 +403,7 @@ impl CPU {
             }
             Instruction::RRCA => {
                 let value = self.registers.a;
-                let new_value = self.rr(value, true, false);
+                let new_value = self.rrca(value);
                 self.registers.a = new_value;
             }
             Instruction::RRLA => {
@@ -653,37 +653,37 @@ impl CPU {
                     let value = self.registers.a;
                     // RR is a seperate instruction from RRA, *will* check the
                     // value to set Zero flag.
-                    let new_value = self.rr(value, false, false);
+                    let new_value = self.rrc(value);
                     self.registers.a = new_value;
                 }
                 ArithmeticTarget::B => {
                     let value = self.registers.b;
-                    let new_value = self.rr(value, false, false);
+                    let new_value = self.rrc(value);
                     self.registers.b = new_value;
                 }
                 ArithmeticTarget::C => {
                     let value = self.registers.c;
-                    let new_value = self.rr(value, false, false);
+                    let new_value = self.rrc(value);
                     self.registers.c = new_value;
                 }
                 ArithmeticTarget::D => {
                     let value = self.registers.d;
-                    let new_value = self.rr(value, false, false);
+                    let new_value = self.rrc(value);
                     self.registers.d = new_value;
                 }
                 ArithmeticTarget::E => {
                     let value = self.registers.e;
-                    let new_value = self.rr(value, false, false);
+                    let new_value = self.rrc(value);
                     self.registers.e = new_value;
                 }
                 ArithmeticTarget::H => {
                     let value = self.registers.h;
-                    let new_value = self.rr(value, false, false);
+                    let new_value = self.rrc(value);
                     self.registers.h = new_value;
                 }
                 ArithmeticTarget::L => {
                     let value = self.registers.l;
-                    let new_value = self.rr(value, false, false);
+                    let new_value = self.rrc(value);
                     self.registers.l = new_value;
                 }
             },
@@ -692,37 +692,37 @@ impl CPU {
                     let value = self.registers.a;
                     // RR is a seperate instruction from RRA, *will* check the
                     // value to set Zero flag.
-                    let new_value = self.rl(value, false, false);
+                    let new_value = self.rlc(value);
                     self.registers.a = new_value;
                 }
                 ArithmeticTarget::B => {
                     let value = self.registers.b;
-                    let new_value = self.rl(value, false, false);
+                    let new_value = self.rlc(value);
                     self.registers.b = new_value;
                 }
                 ArithmeticTarget::C => {
                     let value = self.registers.c;
-                    let new_value = self.rl(value, false, false);
+                    let new_value = self.rlc(value);
                     self.registers.c = new_value;
                 }
                 ArithmeticTarget::D => {
                     let value = self.registers.d;
-                    let new_value = self.rl(value, false, false);
+                    let new_value = self.rlc(value);
                     self.registers.d = new_value;
                 }
                 ArithmeticTarget::E => {
                     let value = self.registers.e;
-                    let new_value = self.rl(value, false, false);
+                    let new_value = self.rlc(value);
                     self.registers.e = new_value;
                 }
                 ArithmeticTarget::H => {
                     let value = self.registers.h;
-                    let new_value = self.rl(value, false, false);
+                    let new_value = self.rlc(value);
                     self.registers.h = new_value;
                 }
                 ArithmeticTarget::L => {
                     let value = self.registers.l;
-                    let new_value = self.rl(value, false, false);
+                    let new_value = self.rlc(value);
                     self.registers.l = new_value;
                 }
             },
@@ -971,6 +971,41 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = 1 & value == 1;
+
+        new_value
+    }
+    fn rlc(&mut self, value: u8) -> u8 {
+        let carry_value = (0x80 & value) >> 7;
+        let new_value = (value << 1) | carry_value;
+
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry_value == 1;
+
+        new_value
+    }
+
+    fn rrc(&mut self, value: u8) -> u8 {
+        let carry_value = 1 & value;
+        let new_value = (value >> 1) | (carry_value << 7);
+
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry_value == 1;
+
+        new_value
+    }
+
+    fn rrca(&mut self, value: u8) -> u8 {
+        let carry_value = 1 & value;
+        let new_value = (value >> 1) | (carry_value << 7);
+
+        self.registers.f.zero = false;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry_value == 1;
 
         new_value
     }
