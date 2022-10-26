@@ -447,3 +447,21 @@ fn test_sla() {
         "Carry flag is ste to old bit 7"
     )
 }
+
+#[test]
+fn test_swap() {
+    let mut test_cpu = create_cpu(0b11110000, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::SWAP(ArithmeticTarget::A));
+
+    assert_eq!(
+        test_cpu.registers.a, 0b00001111,
+        "Swap the upper and lower nibbles of register A"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0,
+        "Zero flag is set if zero, all other flags reset"
+    )
+}

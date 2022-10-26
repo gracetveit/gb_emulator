@@ -533,7 +533,6 @@ impl CPU {
                 }
             },
             Instruction::SRL(target) => match target {
-                // TODO: MSB(?) set to 0
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
                     let new_value = self.srl(value);
@@ -800,6 +799,43 @@ impl CPU {
                     self.registers.l = new_value;
                 }
             },
+            Instruction::SWAP(target) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    let new_value = self.swap(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    let new_value = self.swap(value);
+                    self.registers.b = new_value;
+                }
+                ArithmeticTarget::C => {
+                    let value = self.registers.c;
+                    let new_value = self.swap(value);
+                    self.registers.c = new_value;
+                }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    let new_value = self.swap(value);
+                    self.registers.d = new_value;
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    let new_value = self.swap(value);
+                    self.registers.e = new_value;
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    let new_value = self.swap(value);
+                    self.registers.h = new_value;
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    let new_value = self.swap(value);
+                    self.registers.l = new_value;
+                }
+            },
         }
     }
 
@@ -1055,6 +1091,20 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry_value == 1;
+
+        new_value
+    }
+
+    fn swap(&mut self, value: u8) -> u8 {
+        let upper_nibble = value & 0xF0;
+        let lower_nibble = value & 0x0F;
+
+        let new_value = (upper_nibble >> 4) | (lower_nibble << 4);
+
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = false;
 
         new_value
     }
