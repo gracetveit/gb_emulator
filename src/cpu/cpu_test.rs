@@ -243,3 +243,14 @@ fn test_rrla() {
     assert_eq!(test_cpu.registers.a, 0b000101110);
     assert_eq!(test_cpu.registers.f.carry, false)
 }
+
+#[test]
+fn test_cpl() {
+    let mut test_cpu = create_cpu(0b11110000, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::CPL);
+
+    assert_eq!(test_cpu.registers.a, 0b00001111, "Testing register A");
+
+    assert_eq!(u8::from(test_cpu.registers.f), 0b01100000, "Testing Registers");
+}

@@ -411,6 +411,24 @@ impl CPU {
                 let new_value = self.rl(value, true, false);
                 self.registers.a = new_value;
             }
+            Instruction::CPL => {
+                let value = self.registers.a;
+
+                let mut new_value:u8 = 255;
+
+                let mut i = 0b00000001;
+
+                while i != 0 {
+                    new_value = new_value ^ (value & i);
+                    i = i << 1;
+                }
+
+                self.registers.f.subtract = true;
+                self.registers.f.half_carry = true;
+
+                self.registers.a = new_value;
+
+            }
         }
     }
 
