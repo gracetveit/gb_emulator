@@ -23,12 +23,12 @@ pub enum Instruction {
     RES(ArithmeticTarget, u8),
     SET(ArithmeticTarget, u8),
     SRL(ArithmeticTarget),
-    // RR
-    // RL
-    // RRC
-    // RLC
-    // SRA
-    // SLA
+    RR(ArithmeticTarget),
+    RL(ArithmeticTarget),
+    RRC(ArithmeticTarget),
+    RLC(ArithmeticTarget),
+    SRA(ArithmeticTarget),
+    // SLA(ArithmeticTarget)
     // SWAP
 }
 pub enum ArithmeticTarget {

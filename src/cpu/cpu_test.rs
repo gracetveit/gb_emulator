@@ -333,3 +333,98 @@ fn test_srl() {
         "Carry flag contains bit from shift"
     )
 }
+
+#[test]
+fn test_rr() {
+    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::RR(ArithmeticTarget::B));
+
+    assert_eq!(
+        test_cpu.registers.b, 0b01000000,
+        "Testing Rotate Right Through Carry of Register B"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00010000,
+        "Carry flag contains rotated bit"
+    )
+}
+
+#[test]
+fn test_rl() {
+    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::RL(ArithmeticTarget::B));
+
+    assert_eq!(
+        test_cpu.registers.b, 0b00000010,
+        "Testing Rotate Left Through Cary of Register B"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00010000,
+        "Carry flag contains rotated bit"
+    )
+}
+
+#[test]
+fn test_rrc() {
+    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0b00010000));
+
+    test_cpu.execute(Instruction::RRC(ArithmeticTarget::B));
+
+    assert_eq!(
+        test_cpu.registers.b, 0b01000000,
+        "Testing Rotate Right Through Carry of Register B"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00010000,
+        "Carry flag contains rotated bit"
+    )
+}
+
+#[test]
+fn test_rlc() {
+    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0b00010000));
+
+    test_cpu.execute(Instruction::RLC(ArithmeticTarget::B));
+
+    assert_eq!(
+        test_cpu.registers.b, 0b00000010,
+        "Testing Rotate Right Through Carry of Register B"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00010000,
+        "Carry flag contains rotated bit"
+    )
+}
+
+#[test]
+fn test_sra() {
+    let mut test_cpu = create_cpu(0b10100001, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::SRA(ArithmeticTarget::A));
+
+    assert_eq!(
+        test_cpu.registers.a, 0b11010000,
+        "Testing Arithmetic Shift Right on Register A"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00010000,
+        "Carry flag set to bit 0"
+    )
+}
+
+// #[test]
+// fn test_sla() {
+//     let mut test_cpu
+// }
