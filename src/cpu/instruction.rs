@@ -30,6 +30,28 @@ pub enum Instruction {
     SRA(ArithmeticTarget),
     SLA(ArithmeticTarget),
     SWAP(ArithmeticTarget),
+    JP(JumpTest)
+}
+
+impl Instruction {
+    pub fn from_byte(byte: u8, prefixed: bool) -> Option<Instruction> {
+        if prefixed {
+            Instruction::from_byte_prefixed(byte)
+        } else {
+            Instruction::from_byte_not_prefixed(byte)
+        }
+    }
+
+    fn from_byte_prefixed(byte: u8) -> Option<Instruction> {
+        match byte {
+            _ => {todo!()}
+        }
+    }
+    fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
+        match byte {
+            _ => {todo!()}
+        }
+    }
 }
 pub enum ArithmeticTarget {
     A,
@@ -39,4 +61,12 @@ pub enum ArithmeticTarget {
     E,
     H,
     L,
+}
+
+pub enum JumpTest {
+    NotZero,
+    Zero,
+    NotCarry,
+    Carry,
+    Always
 }
