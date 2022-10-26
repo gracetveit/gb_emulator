@@ -1,5 +1,3 @@
-// TODO Add all instructions
-
 pub enum Instruction {
     ADD(ArithmeticTarget),
     // ADDHL
@@ -93,11 +91,58 @@ impl Instruction {
             }
             0x0C => Some(Instruction::INC(ArithmeticTarget::C)),
             0x0D => Some(Instruction::DEC(ArithmeticTarget::C)),
-            0x0E => Some(Instruction::LD(LoadType::Byte(LoadByteTarget::C, LoadByteSource::D8))),
+            0x0E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::D8,
+            ))),
             0x0F => Some(Instruction::RRCA),
-            _ => {
+            0x10 => {
+                // TODO: Implement `STOP d8`
                 todo!()
             }
+            0x11 => {
+                // TODO Implement `LD DE, d16`
+                todo!()
+            }
+            0x12 => {
+                // TODO Implement `LD (DE), A`
+                todo!()
+            }
+            0x13 => {
+                // TODO Implement `INC DE`
+                todo!()
+            }
+            0x14 => Some(Instruction::INC(ArithmeticTarget::D)),
+            0x15 => Some(Instruction::DEC(ArithmeticTarget::D)),
+            0x16 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::D8,
+            ))),
+            0x17 => Some(Instruction::RLA),
+            0x18 => {
+                // TODO Implement `JR r8`
+                todo!()
+            }
+            0x19 => {
+                // TODO Implement `ADD HL, DE`
+                todo!()
+            }
+            0x1A => {
+                // Implement `LD A, (DE)`
+                todo!()
+            }
+            0x1B => {
+                // Implement `DEC DE`
+                todo!()
+            }
+            0x1C => Some(Instruction::INC(ArithmeticTarget::E)),
+            0x1D => Some(Instruction::DEC(ArithmeticTarget::E)),
+            0x1E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::D8,
+            ))),
+            0x1F => Some(Instruction::RRA),
+            _ => None,
         }
     }
 
