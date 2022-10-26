@@ -12,6 +12,7 @@ pub struct CPU {
     pc: u16,
     sp: u16,
     bus: MemoryBus,
+    is_halted: bool,
 }
 
 impl CPU {
@@ -39,6 +40,9 @@ impl CPU {
     }
 
     pub fn execute(&mut self, instruction: Instruction) -> u16 {
+        if self.is_halted {
+            return self.pc;
+        }
         match instruction {
             Instruction::ADD(target) => match target {
                 ArithmeticTarget::A => {
@@ -1075,6 +1079,11 @@ impl CPU {
                     }
                 };
                 self.return_(jump_condition)
+            }
+            Instruction::NOP => self.pc.wrapping_add(1),
+            Instruction::HALT => {
+                self.is_halted = true;
+                self.pc.wrapping_add(1)
             }
         }
     }
