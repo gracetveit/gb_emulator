@@ -18,8 +18,8 @@ pub enum Instruction {
     RLA,
     RRCA,
     RRLA,
-    CPL
-    // BIT
+    CPL,
+    BIT(ArithmeticTarget, u8),
     // RESET
     // SET
     // SRL

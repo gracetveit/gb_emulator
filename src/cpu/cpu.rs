@@ -414,7 +414,7 @@ impl CPU {
             Instruction::CPL => {
                 let value = self.registers.a;
 
-                let mut new_value:u8 = 255;
+                let mut new_value: u8 = 255;
 
                 let mut i = 0b00000001;
 
@@ -427,8 +427,37 @@ impl CPU {
                 self.registers.f.half_carry = true;
 
                 self.registers.a = new_value;
-
             }
+            Instruction::BIT(target, n) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    self.bit(value, n);
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    self.bit(value, n);
+                }
+                ArithmeticTarget::C => {
+                    let value = self.registers.c;
+                    self.bit(value, n);
+                }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    self.bit(value, n);
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    self.bit(value, n);
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    self.bit(value, n);
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    self.bit(value, n);
+                }
+            },
         }
     }
 
@@ -563,7 +592,7 @@ impl CPU {
 
         let new_value = match through_carry {
             true => (value >> 1) | carry_value,
-            false => value >> 1
+            false => value >> 1,
         };
 
         self.registers.f.zero = is_a_register || new_value == 0;
@@ -579,9 +608,9 @@ impl CPU {
             true => 1,
             false => 0,
         };
-        let new_value = match through_carry{
+        let new_value = match through_carry {
             true => (value << 1) | carry_value,
-            false => value << 1
+            false => value << 1,
         };
 
         self.registers.f.zero = !is_a_register || new_value == 0;
@@ -590,5 +619,13 @@ impl CPU {
         self.registers.f.carry = (value >> 7) & 1 == 1;
 
         new_value
+    }
+
+    fn bit(&mut self, value: u8, n: u8) {
+        let compare_value: u8 = 1 << n;
+
+        self.registers.f.zero = value & compare_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = true;
     }
 }

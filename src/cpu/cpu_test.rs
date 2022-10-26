@@ -252,5 +252,30 @@ fn test_cpl() {
 
     assert_eq!(test_cpu.registers.a, 0b00001111, "Testing register A");
 
-    assert_eq!(u8::from(test_cpu.registers.f), 0b01100000, "Testing Registers");
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b01100000,
+        "Testing Registers"
+    );
+}
+
+#[test]
+fn test_bit() {
+    let mut test_cpu = create_cpu(0b00001111, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::BIT(ArithmeticTarget::A, 0));
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00100000,
+        "Testing reading Bit 0 of A register"
+    );
+
+    test_cpu.execute(Instruction::BIT(ArithmeticTarget::A, 7));
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b10100000,
+        "Testing reading Bit 7 of A register"
+    )
 }
