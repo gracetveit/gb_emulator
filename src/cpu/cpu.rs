@@ -495,6 +495,43 @@ impl CPU {
                     self.registers.l = new_value;
                 }
             },
+            Instruction::SET(target, n) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    let new_value = self.set(value, n);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    let new_value = self.set(value, n);
+                    self.registers.b = new_value;
+                }
+                ArithmeticTarget::C => {
+                    let value = self.registers.c;
+                    let new_value = self.set(value, n);
+                    self.registers.c = new_value;
+                }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    let new_value = self.set(value, n);
+                    self.registers.d = new_value;
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    let new_value = self.set(value, n);
+                    self.registers.e = new_value;
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    let new_value = self.set(value, n);
+                    self.registers.h = new_value;
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    let new_value = self.set(value, n);
+                    self.registers.l = new_value;
+                }
+            },
         }
     }
 
@@ -669,6 +706,12 @@ impl CPU {
     fn res(&mut self, value: u8, n: u8) -> u8 {
         let compare_value: u8 = 1 << n;
         let new_value = value ^ compare_value;
+        new_value
+    }
+
+    fn set(&mut self, value: u8, n: u8) -> u8 {
+        let compare_value: u8 = 1 << n;
+        let new_value = value | compare_value;
         new_value
     }
 }

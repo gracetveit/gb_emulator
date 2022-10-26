@@ -297,3 +297,21 @@ fn test_res() {
         "Flags are not touched during operation"
     )
 }
+
+#[test]
+fn test_set() {
+    let mut test_cpu = create_cpu(0, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::SET(ArithmeticTarget::A, 3));
+
+    assert_eq!(
+        test_cpu.registers.a, 8,
+        "Testing setting bit 3 of register A"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0,
+        "Flags are not touched during operation"
+    )
+}

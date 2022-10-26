@@ -21,7 +21,7 @@ pub enum Instruction {
     CPL,
     BIT(ArithmeticTarget, u8),
     RES(ArithmeticTarget, u8),
-    // SET
+    SET(ArithmeticTarget, u8),
     // SRL
     // RR
     // RL
