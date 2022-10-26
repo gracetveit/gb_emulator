@@ -279,3 +279,21 @@ fn test_bit() {
         "Testing reading Bit 7 of A register"
     )
 }
+
+#[test]
+fn test_res() {
+    let mut test_cpu = create_cpu(0b00001111, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::RES(ArithmeticTarget::A, 0));
+
+    assert_eq!(
+        test_cpu.registers.a, 0b00001110,
+        "Testing resetting bit 0 of register A"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0,
+        "Flags are not touched during operation"
+    )
+}
