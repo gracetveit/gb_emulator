@@ -221,8 +221,14 @@ fn test_rrca() {
 
     test_cpu.execute(Instruction::RRCA);
 
-    assert_eq!(test_cpu.registers.a, 0b10001011, "Testing Rotate of Register A");
-    assert_eq!(test_cpu.registers.f.carry, true, "Testing Bit 0 to Carry Flag")
+    assert_eq!(
+        test_cpu.registers.a, 0b10001011,
+        "Testing Rotate of Register A"
+    );
+    assert_eq!(
+        test_cpu.registers.f.carry, true,
+        "Testing Bit 0 to Carry Flag"
+    )
 }
 
 #[test]
@@ -424,7 +430,20 @@ fn test_sra() {
     )
 }
 
-// #[test]
-// fn test_sla() {
-//     let mut test_cpu
-// }
+#[test]
+fn test_sla() {
+    let mut test_cpu = create_cpu(0b10100001, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::SLA(ArithmeticTarget::A));
+
+    assert_eq!(
+        test_cpu.registers.a, 0b01000010,
+        "Arithmetic Shift Left of Register A"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00010000,
+        "Carry flag is ste to old bit 7"
+    )
+}

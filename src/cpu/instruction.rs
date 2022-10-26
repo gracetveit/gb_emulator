@@ -28,7 +28,7 @@ pub enum Instruction {
     RRC(ArithmeticTarget),
     RLC(ArithmeticTarget),
     SRA(ArithmeticTarget),
-    // SLA(ArithmeticTarget)
+    SLA(ArithmeticTarget),
     // SWAP
 }
 pub enum ArithmeticTarget {

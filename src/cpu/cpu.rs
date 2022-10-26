@@ -762,7 +762,44 @@ impl CPU {
                     let new_value = self.sra(value);
                     self.registers.l = new_value;
                 }
-            }
+            },
+            Instruction::SLA(target) => match target {
+                ArithmeticTarget::A => {
+                    let value = self.registers.a;
+                    let new_value = self.sla(value);
+                    self.registers.a = new_value;
+                }
+                ArithmeticTarget::B => {
+                    let value = self.registers.b;
+                    let new_value = self.sla(value);
+                    self.registers.b = new_value;
+                }
+                ArithmeticTarget::C => {
+                    let value = self.registers.c;
+                    let new_value = self.sla(value);
+                    self.registers.c = new_value;
+                }
+                ArithmeticTarget::D => {
+                    let value = self.registers.d;
+                    let new_value = self.sla(value);
+                    self.registers.d = new_value;
+                }
+                ArithmeticTarget::E => {
+                    let value = self.registers.e;
+                    let new_value = self.sla(value);
+                    self.registers.e = new_value;
+                }
+                ArithmeticTarget::H => {
+                    let value = self.registers.h;
+                    let new_value = self.sla(value);
+                    self.registers.h = new_value;
+                }
+                ArithmeticTarget::L => {
+                    let value = self.registers.l;
+                    let new_value = self.sla(value);
+                    self.registers.l = new_value;
+                }
+            },
         }
     }
 
@@ -1003,6 +1040,18 @@ impl CPU {
         let new_value = (value >> 1) | (carry_value << 7);
 
         self.registers.f.zero = false;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = carry_value == 1;
+
+        new_value
+    }
+
+    fn sla(&mut self, value: u8) -> u8 {
+        let carry_value = (0x80 & value) >> 7;
+        let new_value = value << 1;
+
+        self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = false;
         self.registers.f.carry = carry_value == 1;
