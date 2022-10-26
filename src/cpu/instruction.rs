@@ -22,7 +22,7 @@ pub enum Instruction {
     BIT(ArithmeticTarget, u8),
     RES(ArithmeticTarget, u8),
     SET(ArithmeticTarget, u8),
-    // SRL
+    SRL(ArithmeticTarget),
     // RR
     // RL
     // RRC

@@ -315,3 +315,21 @@ fn test_set() {
         "Flags are not touched during operation"
     )
 }
+
+#[test]
+fn test_srl() {
+    let mut test_cpu = create_cpu(0b10001111, 0, FlagsRegister::from(0));
+
+    test_cpu.execute(Instruction::SRL(ArithmeticTarget::A));
+
+    assert_eq!(
+        test_cpu.registers.a, 0b01000111,
+        "Testing logical shift right of Register A"
+    );
+
+    assert_eq!(
+        u8::from(test_cpu.registers.f),
+        0b00010000,
+        "Carry flag contains bit from shift"
+    )
+}
