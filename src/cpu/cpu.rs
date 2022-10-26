@@ -1,12 +1,17 @@
 use super::{
-    instruction::{ArithmeticTarget, Instruction, JumpTest},
-    registers::Registers, memory_bus::MemoryBus,
+    instruction::{
+        ArithmeticTarget, Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType,
+        StackTarget,
+    },
+    memory_bus::MemoryBus,
+    registers::Registers,
 };
 
 pub struct CPU {
     pub registers: Registers,
     pc: u16,
-    bus: MemoryBus
+    sp: u16,
+    bus: MemoryBus,
 }
 
 impl CPU {
@@ -17,10 +22,15 @@ impl CPU {
             instruction_byte = self.bus.read_byte(self.pc + 1);
         }
 
-        let next_pc = if let Some(instruction) = Instruction::from_byte(instruction_byte, prefixed) {
+        let next_pc = if let Some(instruction) = Instruction::from_byte(instruction_byte, prefixed)
+        {
             self.execute(instruction)
         } else {
-            let description = format!("0x{}{:x}", if prefixed {"cb"} else {""}, instruction_byte);
+            let description = format!(
+                "0x{}{:x}",
+                if prefixed { "cb" } else { "" },
+                instruction_byte
+            );
             panic!("Unkown instruction found for: 0x{}", description);
         };
 
@@ -475,37 +485,37 @@ impl CPU {
                 self.registers.f.subtract = false;
                 self.registers.f.half_carry = false;
                 self.registers.f.carry = !self.registers.f.carry;
-                    self.pc.wrapping_add(1)
+                self.pc.wrapping_add(1)
             }
             Instruction::SCF => {
                 self.registers.f.subtract = false;
                 self.registers.f.half_carry = false;
                 self.registers.f.carry = true;
-                    self.pc.wrapping_add(1)
+                self.pc.wrapping_add(1)
             }
             Instruction::RRA => {
                 let value = self.registers.a;
                 let new_value = self.rr(value, true, true);
                 self.registers.a = new_value;
-                    self.pc.wrapping_add(1)
+                self.pc.wrapping_add(1)
             }
             Instruction::RLA => {
                 let value = self.registers.a;
                 let new_value = self.rl(value, true, true);
                 self.registers.a = new_value;
-                    self.pc.wrapping_add(1)
+                self.pc.wrapping_add(1)
             }
             Instruction::RRCA => {
                 let value = self.registers.a;
                 let new_value = self.rrca(value);
                 self.registers.a = new_value;
-                    self.pc.wrapping_add(1)
+                self.pc.wrapping_add(1)
             }
             Instruction::RRLA => {
                 let value = self.registers.a;
                 let new_value = self.rl(value, true, false);
                 self.registers.a = new_value;
-                    self.pc.wrapping_add(1)
+                self.pc.wrapping_add(1)
             }
             Instruction::CPL => {
                 let value = self.registers.a;
@@ -523,7 +533,7 @@ impl CPU {
                 self.registers.f.half_carry = true;
 
                 self.registers.a = new_value;
-                    self.pc.wrapping_add(1)
+                self.pc.wrapping_add(1)
             }
             Instruction::BIT(target, n) => match target {
                 ArithmeticTarget::A => {
@@ -1016,11 +1026,98 @@ impl CPU {
                     JumpTest::NotCarry => !self.registers.f.carry,
                     JumpTest::Zero => self.registers.f.zero,
                     JumpTest::Carry => self.registers.f.carry,
-                    JumpTest::Always => true
+                    JumpTest::Always => true,
                 };
                 self.jump(jump_condition)
             }
+            Instruction::LD(load_type) => match load_type {
+                LoadType::Byte(target, source) => {
+                    let source_value = match source {
+                        _ => { /* TODO: implement other sources */ }
+                    };
+                    match target {
+                        _ => { /* TODO: implement other targets */ }
+                    };
+                    match source {
+                        LoadByteSource::D8 => self.pc.wrapping_add(2),
+                        _ => self.pc.wrapping_add(1),
+                    }
+                }
+            },
+            Instruction::PUSH(target) => {
+                let value = match target {
+                    StackTarget::BC => self.registers.get_bc(),
+                };
+                self.push(value);
+                self.pc.wrapping_add(1)
+            }
+            Instruction::POP(target) => {
+                let result = self.pop();
+                match target {
+                    StackTarget::BC => self.registers.set_bc(result),
+                };
+                self.pc.wrapping_add(1)
+            }
+            Instruction::CALL(test) => {
+                let jump_condition: bool = match test {
+                    _ => {
+                        // TODO: support Jump conditions
+                        todo!()
+                    }
+                };
+                self.call(jump_condition)
+            }
+            Instruction::RET(test) => {
+                let jump_condition: bool = match test {
+                    _ => {
+                        // TODO: support Jump conditions
+                        todo!()
+                    }
+                };
+                self.return_(jump_condition)
+            }
         }
+    }
+
+    fn push(&mut self, value: u16) {
+        self.sp = self.sp.wrapping_sub(1);
+        self.bus.write_byte(self.sp, ((value & 0xFF00) >> 8) as u8);
+
+        self.sp = self.sp.wrapping_sub(1);
+        self.bus.write_byte(self.sp, (value & 0xFF) as u8);
+    }
+
+    fn pop(&mut self) -> u16 {
+        let lsb = self.bus.read_byte(self.sp) as u16;
+        self.sp = self.sp.wrapping_add(1);
+
+        let msb = self.bus.read_byte(self.sp) as u16;
+        self.sp = self.sp.wrapping_add(1);
+
+        (msb << 8) | lsb
+    }
+
+    fn call(&mut self, should_jump: bool) -> u16 {
+        let next_pc = self.pc.wrapping_add(3);
+        if should_jump {
+            self.push(next_pc);
+            self.read_next_word()
+        } else {
+            next_pc
+        }
+    }
+
+    fn return_(&mut self, should_jump: bool) -> u16 {
+        if should_jump {
+            self.pop()
+        } else {
+            self.pc.wrapping_add(1)
+        }
+    }
+
+    fn read_next_word(&mut self) -> u16 {
+        // TODO: Implement read_next_word
+        todo!()
     }
 
     fn add(&mut self, value: u8) -> u8 {

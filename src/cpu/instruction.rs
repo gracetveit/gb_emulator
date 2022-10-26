@@ -30,7 +30,12 @@ pub enum Instruction {
     SRA(ArithmeticTarget),
     SLA(ArithmeticTarget),
     SWAP(ArithmeticTarget),
-    JP(JumpTest)
+    JP(JumpTest),
+    LD(LoadType),
+    PUSH(StackTarget),
+    POP(StackTarget),
+    CALL(JumpTest),
+    RET(JumpTest),
 }
 
 impl Instruction {
@@ -44,12 +49,16 @@ impl Instruction {
 
     fn from_byte_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
-            _ => {todo!()}
+            _ => {
+                todo!()
+            }
         }
     }
     fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
-            _ => {todo!()}
+            _ => {
+                todo!()
+            }
         }
     }
 }
@@ -68,5 +77,43 @@ pub enum JumpTest {
     Zero,
     NotCarry,
     Carry,
-    Always
+    Always,
+}
+
+pub enum LoadType {
+    Byte(LoadByteTarget, LoadByteSource),
+    // TODO: Add remaining types
+    // Word
+    // AFromIndirect
+    // IndirectFromA
+    // AFromByteAddress,
+    // ByteAddressFromA
+}
+
+pub enum LoadByteTarget {
+    A,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    HLI,
+}
+
+pub enum LoadByteSource {
+    A,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    D8,
+    HLI,
+}
+
+pub enum StackTarget {
+    BC,
+    // TODO: Add more targets
 }
