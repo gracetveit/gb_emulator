@@ -49,15 +49,61 @@ impl Instruction {
         }
     }
 
-    fn from_byte_prefixed(byte: u8) -> Option<Instruction> {
+    fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
+            // TODO: Implement non-prefixed Opcodes
+            0x00 => Some(Instruction::NOP),
+            0x01 => {
+                /* TODO: Implement `LD BC, d16` */
+                todo!()
+            }
+            0x02 => {
+                /* TODO: Implement `LD (BC), A` */
+                todo!()
+            }
+            0x03 => {
+                /* TODO: Implement `INC BC` */
+                todo!()
+            }
+            0x04 => Some(Instruction::INC(ArithmeticTarget::B)),
+            0x05 => Some(Instruction::DEC(ArithmeticTarget::B)),
+            0x06 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::D8,
+            ))),
+            0x07 => {
+                // TODO: Implement `RLCA`
+                todo!()
+            }
+            0x08 => {
+                // TODO: Implement `LD (a16), SP`
+                todo!()
+            }
+            0x09 => {
+                // TODO: Implement `ADD HL, BC`
+                todo!()
+            }
+            0x0A => {
+                // TODO: Implement `LD A, (BC)`
+                todo!()
+            }
+            0x0B => {
+                // TODO: Implement `DEC BC`
+                todo!()
+            }
+            0x0C => Some(Instruction::INC(ArithmeticTarget::C)),
+            0x0D => Some(Instruction::DEC(ArithmeticTarget::C)),
+            0x0E => Some(Instruction::LD(LoadType::Byte(LoadByteTarget::C, LoadByteSource::D8))),
+            0x0F => Some(Instruction::RRCA),
             _ => {
                 todo!()
             }
         }
     }
-    fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
+
+    fn from_byte_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
+            // TODO: Implement prefixed Opcodes
             _ => {
                 todo!()
             }
