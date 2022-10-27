@@ -456,6 +456,23 @@ impl Instruction {
             0xDE => todo!(), // TODO: Implement `SBC A, d8`
             0xDF => todo!(), // TODO: Implement `RST 18H`
 
+            0xE0 => todo!(), // TODO: Implement `LDH (a8), A`
+            0xE1 => todo!(), // TODO: Implement `POP HL`
+            0xE2 => todo!(), // TODO: Implement `LD (C), A`
+            0xE3 => None, // Empty Byte
+            0xE4 => None, // Empty Byte
+            0xE5 => todo!(), // TODO: Implement `PUSH HL`
+            0xE6 => todo!(), // TODO: Implement `AND d8`
+            0xE7 => todo!(), // TODO: Implement `RST 20H`
+            0xE8 => todo!(), // TODO: Implement `ADD SP, r8`,
+            0xE9 => todo!(), // TODO: Implement `JP HL`
+            0xEA => todo!(), // TODO: Implement `LD (a16), A`
+            0xEB => None, // Empty Byte
+            0xEC => None, // Empty Byte
+            0xED => None, // Empty Byte
+            0xEE => todo!(), // TODO: Implement `XOR d8`
+            0xEF => todo!(), // TODO: Implement `RST 28H`
+
             _ => None,
         }
     }
