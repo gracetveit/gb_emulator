@@ -353,6 +353,40 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::A
             ))),
+
+            0x80 => Some(Instruction::ADD(ArithmeticTarget::B)),
+            0x81 => Some(Instruction::ADC(ArithmeticTarget::C)),
+            0x82 => Some(Instruction::ADD(ArithmeticTarget::D)),
+            0x83 => Some(Instruction::ADD(ArithmeticTarget::E)),
+            0x84 => Some(Instruction::ADD(ArithmeticTarget::H)),
+            0x85 => Some(Instruction::ADD(ArithmeticTarget::L)),
+            0x86 => todo!(), // TODO: Implement `ADD A, (HL)`
+            0x87 => Some(Instruction::ADD(ArithmeticTarget::A)),
+            0x88 => Some(Instruction::ADC(ArithmeticTarget::B)),
+            0x89 => Some(Instruction::ADC(ArithmeticTarget::C)),
+            0x8A => Some(Instruction::ADC(ArithmeticTarget::D)),
+            0x8B => Some(Instruction::ADC(ArithmeticTarget::E)),
+            0x8C => Some(Instruction::ADC(ArithmeticTarget::H)),
+            0x8D => Some(Instruction::ADC(ArithmeticTarget::L)),
+            0x8E => todo!(), // TODO: Implement `ADC A, (HL)`
+            0x8F => Some(Instruction::ADC(ArithmeticTarget::A)),
+
+            0x90 => Some(Instruction::SUB(ArithmeticTarget::B)),
+            0x91 => Some(Instruction::SUB(ArithmeticTarget::C)),
+            0x92 => Some(Instruction::SUB(ArithmeticTarget::D)),
+            0x93 => Some(Instruction::SUB(ArithmeticTarget::E)),
+            0x94 => Some(Instruction::SUB(ArithmeticTarget::H)),
+            0x95 => Some(Instruction::SUB(ArithmeticTarget::L)),
+            0x96 => todo!(), // TODO: Implement `SUB (HL)`
+            0x97 => Some(Instruction::SUB(ArithmeticTarget::A)),
+            0x98 => Some(Instruction::SBC(ArithmeticTarget::B)),
+            0x99 => Some(Instruction::SBC(ArithmeticTarget::C)),
+            0x9A => Some(Instruction::SBC(ArithmeticTarget::D)),
+            0x9B => Some(Instruction::SBC(ArithmeticTarget::E)),
+            0x9C => Some(Instruction::SBC(ArithmeticTarget::H)),
+            0x9D => Some(Instruction::SBC(ArithmeticTarget::L)),
+            0x9E => todo!(), // TODO: Implement `SBC (HL)`
+            0x9F => Some(Instruction::SBC(ArithmeticTarget::A)),
             _ => None,
         }
     }
