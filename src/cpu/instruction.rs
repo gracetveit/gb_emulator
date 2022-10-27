@@ -405,6 +405,23 @@ impl Instruction {
             0xAE => todo!(), // TODO: Implement `XOR (HL)`
             0xAF => Some(Instruction::XOR(ArithmeticTarget::A)),
 
+            0xB0 => Some(Instruction::OR(ArithmeticTarget::B)),
+            0xB1 => Some(Instruction::OR(ArithmeticTarget::C)),
+            0xB2 => Some(Instruction::OR(ArithmeticTarget::D)),
+            0xB3 => Some(Instruction::OR(ArithmeticTarget::E)),
+            0xB4 => Some(Instruction::OR(ArithmeticTarget::H)),
+            0xB5 => Some(Instruction::OR(ArithmeticTarget::L)),
+            0xB6 => todo!(), // TODO: Implement `OR (HL)`
+            0xB7 => Some(Instruction::OR(ArithmeticTarget::A)),
+            0xB8 => Some(Instruction::CP(ArithmeticTarget::B)),
+            0xB9 => Some(Instruction::CP(ArithmeticTarget::C)),
+            0xBA => Some(Instruction::CP(ArithmeticTarget::D)),
+            0xBB => Some(Instruction::CP(ArithmeticTarget::E)),
+            0xBC => Some(Instruction::CP(ArithmeticTarget::H)),
+            0xBD => Some(Instruction::CP(ArithmeticTarget::L)),
+            0xBE => todo!(), // TODO: Impelemnt `CP (HL)`
+            0xBF => Some(Instruction::CP(ArithmeticTarget::A)),
+
             _ => None,
         }
     }
