@@ -51,44 +51,20 @@ impl Instruction {
         match byte {
             // TODO: Implement non-prefixed Opcodes
             0x00 => Some(Instruction::NOP),
-            0x01 => {
-                /* TODO: Implement `LD BC, d16` */
-                todo!()
-            }
-            0x02 => {
-                /* TODO: Implement `LD (BC), A` */
-                todo!()
-            }
-            0x03 => {
-                /* TODO: Implement `INC BC` */
-                todo!()
-            }
+            0x01 => todo!(), // TODO: Implement `LD BC, d16`
+            0x02 => todo!(), // TODO: Implement `LD (BC), A`
+            0x03 => todo!(), // TODO: Implement `INC BC`
             0x04 => Some(Instruction::INC(ArithmeticTarget::B)),
             0x05 => Some(Instruction::DEC(ArithmeticTarget::B)),
             0x06 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::B,
                 LoadByteSource::D8,
             ))),
-            0x07 => {
-                // TODO: Implement `RLCA`
-                todo!()
-            }
-            0x08 => {
-                // TODO: Implement `LD (a16), SP`
-                todo!()
-            }
-            0x09 => {
-                // TODO: Implement `ADD HL, BC`
-                todo!()
-            }
-            0x0A => {
-                // TODO: Implement `LD A, (BC)`
-                todo!()
-            }
-            0x0B => {
-                // TODO: Implement `DEC BC`
-                todo!()
-            }
+            0x07 => todo!(), // TODO: Implement `RLCA`
+            0x08 => todo!(), // TODO: Implement `LD (a16), SP`
+            0x09 => todo!(), // TODO: Implement `ADD HL, BC`
+            0x0A => todo!(), // TODO: Implement `LD A, (BC)`
+            0x0B => todo!(), // TODO: Implement `DEC BC`
             0x0C => Some(Instruction::INC(ArithmeticTarget::C)),
             0x0D => Some(Instruction::DEC(ArithmeticTarget::C)),
             0x0E => Some(Instruction::LD(LoadType::Byte(
@@ -97,22 +73,10 @@ impl Instruction {
             ))),
             0x0F => Some(Instruction::RRCA),
 
-            0x10 => {
-                // TODO: Implement `STOP d8`
-                todo!()
-            }
-            0x11 => {
-                // TODO Implement `LD DE, d16`
-                todo!()
-            }
-            0x12 => {
-                // TODO Implement `LD (DE), A`
-                todo!()
-            }
-            0x13 => {
-                // TODO Implement `INC DE`
-                todo!()
-            }
+            0x10 => todo!(), // TODO: Implement `STOP d8`
+            0x11 => todo!(), // TODO Implement `LD DE, d16`
+            0x12 => todo!(), // TODO Implement `LD (DE), A`
+            0x13 => todo!(), // TODO Implement `INC DE`
             0x14 => Some(Instruction::INC(ArithmeticTarget::D)),
             0x15 => Some(Instruction::DEC(ArithmeticTarget::D)),
             0x16 => Some(Instruction::LD(LoadType::Byte(
@@ -120,22 +84,10 @@ impl Instruction {
                 LoadByteSource::D8,
             ))),
             0x17 => Some(Instruction::RLA),
-            0x18 => {
-                // TODO Implement `JR r8`
-                todo!()
-            }
-            0x19 => {
-                // TODO Implement `ADD HL, DE`
-                todo!()
-            }
-            0x1A => {
-                // TODO: Implement `LD A, (DE)`
-                todo!()
-            }
-            0x1B => {
-                // TODO: Implement `DEC DE`
-                todo!()
-            }
+            0x18 => todo!(), // TODO Implement `JR r8`
+            0x19 => todo!(), // TODO Implement `ADD HL, DE`
+            0x1A => todo!(), // TODO: Implement `LD A, (DE)`
+            0x1B => todo!(), // TODO: Implement `DEC DE`
             0x1C => Some(Instruction::INC(ArithmeticTarget::E)),
             0x1D => Some(Instruction::DEC(ArithmeticTarget::E)),
             0x1E => Some(Instruction::LD(LoadType::Byte(
@@ -144,51 +96,27 @@ impl Instruction {
             ))),
             0x1F => Some(Instruction::RRA),
 
-            0x20 => {
-                // TODO: Implement `JR NZ, r8`
-                todo!()
-            }
-            0x21 => {
-                // TODO: Implement `LD HL, d16`
-                todo!()
-            }
-            0x22 => {
-                // TODO: Implement `LD (HL+), A`
-                todo!()
-            }
-            0x23 => {
-                // TODO: Implement `INC HL`
-                todo!()
-            }
+            0x20 => todo!(), // TODO: Implement `JR NZ, r8`
+            0x21 => todo!(), // TODO: Implement `LD HL, d16`
+            0x22 => todo!(), // TODO: Implement `LD (HL+), A`
+            0x23 => todo!(), // TODO: Implement `INC HL`
             0x24 => Some(Instruction::INC(ArithmeticTarget::H)),
             0x25 => Some(Instruction::DEC(ArithmeticTarget::H)),
             0x26 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::H,
                 LoadByteSource::D8,
             ))),
-            0x27 => {
-                // TODO: Implement `DAA`
-                todo!()
-            }
-            0x28 => {
-                // TODO: Implement `JR Z, r8`
-                todo!()
-            }
-            0x29 => {
-                // TODO: Implement `ADD HL, HL`
-                todo!()
-            }
-            0x2A => {
-                // TODO: Implement `LD A, (HL+)`
-                todo!()
-            }
-            0x2B => {
-                // TODO: Implement `DEC HL`
-                todo!()
-            }
+            0x27 => todo!(), // TODO: Implement `DAA`
+            0x28 => todo!(), // TODO: Implement `JR Z, r8`
+            0x29 => todo!(), // TODO: Implement `ADD HL, HL`
+            0x2A => todo!(), // TODO: Implement `LD A, (HL+)`
+            0x2B => todo!(), // TODO: Implement `DEC HL`
             0x2C => Some(Instruction::INC(ArithmeticTarget::L)),
             0x2D => Some(Instruction::DEC(ArithmeticTarget::L)),
-            0x2E => Some(Instruction::LD(LoadType::Byte(LoadByteTarget::L, LoadByteSource::D8))),
+            0x2E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::D8,
+            ))),
             0x2F => Some(Instruction::CPL),
 
             0x30 => todo!(), // TODO: Implement `JR NC, r8`
@@ -205,7 +133,10 @@ impl Instruction {
             0x3B => todo!(), // TODO: Implement `DEC SP`
             0x3C => Some(Instruction::INC(ArithmeticTarget::A)),
             0x3D => Some(Instruction::DEC(ArithmeticTarget::A)),
-            0x3E => Some(Instruction::LD(LoadType::Byte(LoadByteTarget::A, LoadByteSource::D8))),
+            0x3E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::D8,
+            ))),
             0x3F => Some(Instruction::CCF),
             _ => None,
         }
