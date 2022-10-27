@@ -435,6 +435,9 @@ impl Instruction {
             0xCA => Some(Instruction::JP(JumpTest::Zero)),
             0xCB => None, // Prefix Byte, does not need to return an instruction
             0xCC => Some(Instruction::CALL(JumpTest::Zero)),
+            0xCD => Some(Instruction::CALL(JumpTest::Always)),
+            0xCE => todo!(), // TODO: Implement `ADC A, d8`
+            0xCF => todo!(), // TODO: Implement `RST 08H`
 
             _ => None,
         }
