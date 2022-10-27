@@ -422,6 +422,20 @@ impl Instruction {
             0xBE => todo!(), // TODO: Impelemnt `CP (HL)`
             0xBF => Some(Instruction::CP(ArithmeticTarget::A)),
 
+            0xC0 => Some(Instruction::RET(JumpTest::NotZero)),
+            0xC1 => Some(Instruction::POP(StackTarget::BC)),
+            0xC2 => Some(Instruction::JP(JumpTest::NotZero)),
+            0xC3 => Some(Instruction::JP(JumpTest::Always)),
+            0xC4 => Some(Instruction::CALL(JumpTest::NotZero)),
+            0xC5 => Some(Instruction::PUSH(StackTarget::BC)),
+            0xC6 => todo!(), // TODO: Implement `ADD A, d8`
+            0xC7 => todo!(), // TODO: Implement `RST 00H`
+            0xC8 => Some(Instruction::RET(JumpTest::Zero)),
+            0xC9 => Some(Instruction::RET(JumpTest::Always)),
+            0xCA => Some(Instruction::JP(JumpTest::Zero)),
+            0xCB => None, // Prefix Byte, does not need to return an instruction
+            0xCC => Some(Instruction::CALL(JumpTest::Zero)),
+
             _ => None,
         }
     }
