@@ -315,6 +315,44 @@ impl Instruction {
                 LoadByteTarget::L,
                 LoadByteSource::A,
             ))),
+
+            0x70 => todo!(), // TODO: Implement `LD (HL), B`
+            0x71 => todo!(), // TODO: Implement `LD (HL), C`
+            0x72 => todo!(), // TODO: Implement `LD (HL), D`
+            0x73 => todo!(), // TODO: Implement `LD (HL), E`
+            0x74 => todo!(), // TODO: Implement `LD (HL), H`
+            0x75 => todo!(), // TODO: Implement `LD (HL), L`
+            0x76 => Some(Instruction::HALT),
+            0x77 => todo!(), // TODO: Implement `LD (HL), A`
+            0x78 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::B
+            ))),
+            0x79 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::C
+            ))),
+            0x7A => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::D
+            ))),
+            0x7B => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::E
+            ))),
+            0x7C => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::H
+            ))),
+            0x7D => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::L
+            ))),
+            0x7E => todo!(), // TODO: Implement `LD A, (HL)`
+            0x7F => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::A
+            ))),
             _ => None,
         }
     }
