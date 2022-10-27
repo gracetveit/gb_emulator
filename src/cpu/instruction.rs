@@ -49,7 +49,6 @@ impl Instruction {
 
     fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
-            // TODO: Implement non-prefixed Opcodes
             0x00 => Some(Instruction::NOP),
             0x01 => todo!(), // TODO: Implement `LD BC, d16`
             0x02 => todo!(), // TODO: Implement `LD (BC), A`
@@ -473,7 +472,22 @@ impl Instruction {
             0xEE => todo!(), // TODO: Implement `XOR d8`
             0xEF => todo!(), // TODO: Implement `RST 28H`
 
-            _ => None,
+            0xF0 => todo!(), // TODO: Implement `LDH A, (a8)`
+            0xF1 => todo!(), // TODO: Implement `POP AF`
+            0xF2 => todo!(), // TODO: Implement `LD A, (C)`
+            0xF3 => todo!(), // TODO: Implement `DI`
+            0xF4 => None, // Empty Byte
+            0xF5 => todo!(), // TODO: Implement `PUSH AF`
+            0xF6 => todo!(), // TODO: Implement `OR d8`,
+            0xF7 => todo!(), // TODO: Implement `RST 30H`
+            0xF8 => todo!(), // TODO: Implement `LD HL, SP + r8`
+            0xF9 => todo!(), // TODO: Implement `LD SP, HL`
+            0xFA => todo!(), // TODO: Implement `LD A, (a16)`
+            0xFB => todo!(), // TODO: Implement `EI`
+            0xFC => None, // Empty Byte
+            0xFD => None, // Empty Byte
+            0xFE => todo!(), // TODO: Implement `CP d8`
+            0xFF => todo!(), // TODO: Implement `RST 38H`
         }
     }
 
