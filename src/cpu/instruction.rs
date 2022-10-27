@@ -439,6 +439,23 @@ impl Instruction {
             0xCE => todo!(), // TODO: Implement `ADC A, d8`
             0xCF => todo!(), // TODO: Implement `RST 08H`
 
+            0xD0 => Some(Instruction::RET(JumpTest::NotCarry)),
+            0xD1 => todo!(), // TODO: Implement `POP DE`
+            0xD2 => Some(Instruction::JP(JumpTest::NotCarry)),
+            0xD3 => None, // Empty Byte
+            0xD4 => Some(Instruction::CALL(JumpTest::NotCarry)),
+            0xD5 => todo!(), // TODO: Implement `PUSH DE`
+            0xD6 => todo!(), // TODO: Implement `SUB d8`
+            0xD7 => todo!(), // TODO: Implement `RST 10H`
+            0xD8 => Some(Instruction::RET(JumpTest::Carry)),
+            0xD9 => todo!(), // TODO: Implement `RETI`
+            0xDA => Some(Instruction::JP(JumpTest::Carry)),
+            0xDB => None, // Empty Byte
+            0xDC => Some(Instruction::CALL(JumpTest::Carry)),
+            0xDD => None, // Empty Byte
+            0xDE => todo!(), // TODO: Implement `SBC A, d8`
+            0xDF => todo!(), // TODO: Implement `RST 18H`
+
             _ => None,
         }
     }
