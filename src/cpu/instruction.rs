@@ -494,9 +494,24 @@ impl Instruction {
     fn from_byte_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
             // TODO: Implement prefixed Opcodes
-            _ => {
-                todo!()
-            }
+            0x00 => Some(Instruction::RLC(ArithmeticTarget::B)),
+            0x01 => Some(Instruction::RLC(ArithmeticTarget::C)),
+            0x02 => Some(Instruction::RLC(ArithmeticTarget::D)),
+            0x03 => Some(Instruction::RLC(ArithmeticTarget::E)),
+            0x04 => Some(Instruction::RLC(ArithmeticTarget::H)),
+            0x05 => Some(Instruction::RLC(ArithmeticTarget::L)),
+            0x06 => todo!(), // TODO: Implement `RLC (HL)`
+            0x07 => Some(Instruction::RLC(ArithmeticTarget::A)),
+            0x08 => Some(Instruction::RRC(ArithmeticTarget::B)),
+            0x09 => Some(Instruction::RRC(ArithmeticTarget::C)),
+            0x0A => Some(Instruction::RRC(ArithmeticTarget::D)),
+            0x0B => Some(Instruction::RRC(ArithmeticTarget::E)),
+            0x0C => Some(Instruction::RRC(ArithmeticTarget::H)),
+            0x0D => Some(Instruction::RRC(ArithmeticTarget::L)),
+            0x0E => todo!(), // TODO: Implement `RRC (HL)`
+            0x0F => Some(Instruction::RRC(ArithmeticTarget::A)),
+
+            _ => todo!()
         }
     }
 }
