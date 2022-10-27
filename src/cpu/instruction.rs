@@ -387,6 +387,24 @@ impl Instruction {
             0x9D => Some(Instruction::SBC(ArithmeticTarget::L)),
             0x9E => todo!(), // TODO: Implement `SBC (HL)`
             0x9F => Some(Instruction::SBC(ArithmeticTarget::A)),
+
+            0xA0 => Some(Instruction::AND(ArithmeticTarget::B)),
+            0xA1 => Some(Instruction::AND(ArithmeticTarget::C)),
+            0xA2 => Some(Instruction::AND(ArithmeticTarget::D)),
+            0xA3 => Some(Instruction::AND(ArithmeticTarget::E)),
+            0xA4 => Some(Instruction::AND(ArithmeticTarget::H)),
+            0xA5 => Some(Instruction::AND(ArithmeticTarget::L)),
+            0xA6 => todo!(), // TODO: Implement `AND (HL)`
+            0xA7 => Some(Instruction::AND(ArithmeticTarget::A)),
+            0xA8 => Some(Instruction::XOR(ArithmeticTarget::B)),
+            0xA9 => Some(Instruction::XOR(ArithmeticTarget::C)),
+            0xAA => Some(Instruction::XOR(ArithmeticTarget::D)),
+            0xAB => Some(Instruction::XOR(ArithmeticTarget::E)),
+            0xAC => Some(Instruction::XOR(ArithmeticTarget::H)),
+            0xAD => Some(Instruction::XOR(ArithmeticTarget::L)),
+            0xAE => todo!(), // TODO: Implement `XOR (HL)`
+            0xAF => Some(Instruction::XOR(ArithmeticTarget::A)),
+
             _ => None,
         }
     }
