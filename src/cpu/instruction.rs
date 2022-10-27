@@ -511,6 +511,23 @@ impl Instruction {
             0x0E => todo!(), // TODO: Implement `RRC (HL)`
             0x0F => Some(Instruction::RRC(ArithmeticTarget::A)),
 
+            0x10 => Some(Instruction::RL(ArithmeticTarget::B)),
+            0x11 => Some(Instruction::RL(ArithmeticTarget::C)),
+            0x12 => Some(Instruction::RL(ArithmeticTarget::D)),
+            0x13 => Some(Instruction::RL(ArithmeticTarget::E)),
+            0x14 => Some(Instruction::RL(ArithmeticTarget::H)),
+            0x15 => Some(Instruction::RL(ArithmeticTarget::L)),
+            0x16 => todo!(), // TODO: Implement `RL (HL)`
+            0x17 => Some(Instruction::RL(ArithmeticTarget::A)),
+            0x18 => Some(Instruction::RR(ArithmeticTarget::B)),
+            0x19 => Some(Instruction::RR(ArithmeticTarget::C)),
+            0x1A => Some(Instruction::RR(ArithmeticTarget::D)),
+            0x1B => Some(Instruction::RR(ArithmeticTarget::E)),
+            0x1C => Some(Instruction::RR(ArithmeticTarget::H)),
+            0x1D => Some(Instruction::RR(ArithmeticTarget::L)),
+            0x1E => todo!(), // TODO: Implement `RR (HL)`
+            0x1F => Some(Instruction::RR(ArithmeticTarget::A)),
+
             _ => todo!()
         }
     }
