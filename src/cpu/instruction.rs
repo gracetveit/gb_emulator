@@ -528,6 +528,40 @@ impl Instruction {
             0x1E => todo!(), // TODO: Implement `RR (HL)`
             0x1F => Some(Instruction::RR(ArithmeticTarget::A)),
 
+            0x20 => Some(Instruction::SLA(ArithmeticTarget::B)),
+            0x21 => Some(Instruction::SLA(ArithmeticTarget::C)),
+            0x22 => Some(Instruction::SLA(ArithmeticTarget::D)),
+            0x23 => Some(Instruction::SLA(ArithmeticTarget::E)),
+            0x24 => Some(Instruction::SLA(ArithmeticTarget::H)),
+            0x25 => Some(Instruction::SLA(ArithmeticTarget::L)),
+            0x26 => todo!(), // TODO: Implement `SLA (HL)`
+            0x27 => Some(Instruction::SLA(ArithmeticTarget::A)),
+            0x28 => Some(Instruction::SRA(ArithmeticTarget::B)),
+            0x29 => Some(Instruction::SRA(ArithmeticTarget::C)),
+            0x2A => Some(Instruction::SRA(ArithmeticTarget::D)),
+            0x2B => Some(Instruction::SRA(ArithmeticTarget::E)),
+            0x2C => Some(Instruction::SRA(ArithmeticTarget::H)),
+            0x2D => Some(Instruction::SRA(ArithmeticTarget::L)),
+            0x2E => todo!(), // TODO: Implement `SRA (HL)`
+            0x2F => Some(Instruction::SRA(ArithmeticTarget::A)),
+
+            0x30 => Some(Instruction::SWAP(ArithmeticTarget::B)),
+            0x31 => Some(Instruction::SWAP(ArithmeticTarget::C)),
+            0x32 => Some(Instruction::SWAP(ArithmeticTarget::D)),
+            0x33 => Some(Instruction::SWAP(ArithmeticTarget::E)),
+            0x34 => Some(Instruction::SWAP(ArithmeticTarget::H)),
+            0x35 => Some(Instruction::SWAP(ArithmeticTarget::L)),
+            0x36 => todo!(), // TODO: Implement `SWAP (HL)`
+            0x37 => Some(Instruction::SWAP(ArithmeticTarget::A)),
+            0x38 => Some(Instruction::SRL(ArithmeticTarget::B)),
+            0x39 => Some(Instruction::SRL(ArithmeticTarget::C)),
+            0x3A => Some(Instruction::SRL(ArithmeticTarget::D)),
+            0x3B => Some(Instruction::SRL(ArithmeticTarget::E)),
+            0x3C => Some(Instruction::SRL(ArithmeticTarget::H)),
+            0x3D => Some(Instruction::SRL(ArithmeticTarget::L)),
+            0x3E => todo!(), // TODO: Implement `SRL (HL)`
+            0x3F => Some(Instruction::SRL(ArithmeticTarget::A)),
+
             _ => todo!()
         }
     }
