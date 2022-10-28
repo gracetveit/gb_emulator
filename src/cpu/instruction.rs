@@ -562,6 +562,22 @@ impl Instruction {
             0x3E => todo!(), // TODO: Implement `SRL (HL)`
             0x3F => Some(Instruction::SRL(ArithmeticTarget::A)),
 
+            0x40 => Some(Instruction::BIT(ArithmeticTarget::B, 0)),
+            0x41 => Some(Instruction::BIT(ArithmeticTarget::C, 0)),
+            0x42 => Some(Instruction::BIT(ArithmeticTarget::D, 0)),
+            0x43 => Some(Instruction::BIT(ArithmeticTarget::E, 0)),
+            0x44 => Some(Instruction::BIT(ArithmeticTarget::H, 0)),
+            0x45 => todo!(), // TODO: Implement `BIT 0, (HL)`
+            0x46 => Some(Instruction::BIT(ArithmeticTarget::A, 0)),
+            0x47 => Some(Instruction::BIT(ArithmeticTarget::B, 1)),
+            0x49 => Some(Instruction::BIT(ArithmeticTarget::C, 1)),
+            0x4A => Some(Instruction::BIT(ArithmeticTarget::D, 1)),
+            0x4B => Some(Instruction::BIT(ArithmeticTarget::E, 1)),
+            0x4C => Some(Instruction::BIT(ArithmeticTarget::H, 1)),
+            0x4D => Some(Instruction::BIT(ArithmeticTarget::L, 1)),
+            0x4E => todo!(), // TODO: Implement `BIT 1, (HL)`
+            0x4F => Some(Instruction::BIT(ArithmeticTarget::A, 1)),
+
             _ => todo!()
         }
     }
