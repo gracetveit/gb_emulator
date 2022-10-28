@@ -661,8 +661,24 @@ impl Instruction {
             0x9B => Some(Instruction::RES(ArithmeticTarget::E, 3)),
             0x9C => Some(Instruction::RES(ArithmeticTarget::H, 3)),
             0x9D => Some(Instruction::RES(ArithmeticTarget::L, 3)),
-            0x9E => todo!(), // TOOD: Implement `RES 3, (HL)`
+            0x9E => todo!(), // TODO: Implement `RES 3, (HL)`
             0x9F => Some(Instruction::RES(ArithmeticTarget::A, 3)),
+
+            0xA0 => Some(Instruction::RES(ArithmeticTarget::B, 4)),
+            0xA1 => Some(Instruction::RES(ArithmeticTarget::C, 4)),
+            0xA2 => Some(Instruction::RES(ArithmeticTarget::D, 4)),
+            0xA3 => Some(Instruction::RES(ArithmeticTarget::E, 4)),
+            0xA4 => Some(Instruction::RES(ArithmeticTarget::H, 4)),
+            0xA5 => Some(Instruction::RES(ArithmeticTarget::L, 4)),
+            0xA6 => todo!(), // TODO: Implement `RES 4, (HL)`
+            0xA7 => Some(Instruction::RES(ArithmeticTarget::A, 4)),
+            0xA8 => Some(Instruction::RES(ArithmeticTarget::B, 5)),
+            0xA9 => Some(Instruction::RES(ArithmeticTarget::C, 5)),
+            0xAA => Some(Instruction::RES(ArithmeticTarget::D, 5)),
+            0xAB => Some(Instruction::RES(ArithmeticTarget::E, 5)),
+            0xAC => Some(Instruction::RES(ArithmeticTarget::H, 5)),
+            0xAD => Some(Instruction::RES(ArithmeticTarget::L, 5)),
+            0xAE => todo!(), // TODO: Implement `RES 5, (HL)`
 
             _ => todo!()
         }
