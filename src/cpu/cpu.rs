@@ -2,6 +2,7 @@ use super::{
     instruction::{
         ArithmeticTarget, Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType,
         StackTarget,
+        D8Operation
     },
     memory_bus::MemoryBus,
     registers::{FlagsRegister, Registers},
@@ -1149,6 +1150,55 @@ impl CPU {
                     self.pc.wrapping_add(2)
                 }
             },
+            Instruction::ImmedieteArithmetic(operation) => match operation {
+                D8Operation::ADD => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    let new_value = self.add(value);
+                    self.registers.a = new_value;
+                    self.pc.wrapping_add(2)
+                }
+                D8Operation::ADC => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    let new_value = self.adc(value);
+                    self.registers.a = new_value;
+                    self.pc.wrapping_add(2)
+                }
+                D8Operation::AND => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    let new_value = self.and(value);
+                    self.registers.a = new_value;
+                    self.pc.wrapping_add(2)
+                }
+                D8Operation::CP => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    self.sub(value);
+                    self.pc.wrapping_add(2)
+                }
+                D8Operation::OR => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    let new_value = self.or(value);
+                    self.registers.a = new_value;
+                    self.pc.wrapping_add(2)
+                }
+                D8Operation::SBC => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    let new_value = self.sbc(value);
+                    self.registers.a = new_value;
+                    self.pc.wrapping_add(2)
+                }
+                D8Operation::SUB => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    let new_value = self.sub(value);
+                    self.registers.a = new_value;
+                    self.pc.wrapping_add(2)
+                }
+                D8Operation::XOR => {
+                    let value = self.bus.read_byte(self.pc + 1);
+                    let new_value = self.xor(value, false);
+                    self.registers.a = new_value;
+                    self.pc.wrapping_add(2)
+                }
+            }
             Instruction::JP(test) => {
                 let jump_condition = match test {
                     JumpTest::NotZero => !self.registers.f.zero,

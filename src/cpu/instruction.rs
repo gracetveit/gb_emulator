@@ -36,6 +36,7 @@ pub enum Instruction {
     RET(JumpTest),
     NOP,
     HALT,
+    ImmedieteArithmetic(D8Operation),
 }
 
 impl Instruction {
@@ -427,7 +428,7 @@ impl Instruction {
             0xC3 => Some(Instruction::JP(JumpTest::Always)),
             0xC4 => Some(Instruction::CALL(JumpTest::NotZero)),
             0xC5 => Some(Instruction::PUSH(StackTarget::BC)),
-            0xC6 => todo!(), // TODO: Implement `ADD A, d8`
+            0xC6 => Some(Instruction::ImmedieteArithmetic(D8Operation::ADD)),
             0xC7 => todo!(), // TODO: Implement `RST 00H`
             0xC8 => Some(Instruction::RET(JumpTest::Zero)),
             0xC9 => Some(Instruction::RET(JumpTest::Always)),
@@ -435,7 +436,7 @@ impl Instruction {
             0xCB => None, // Prefix Byte, does not need to return an instruction
             0xCC => Some(Instruction::CALL(JumpTest::Zero)),
             0xCD => Some(Instruction::CALL(JumpTest::Always)),
-            0xCE => todo!(), // TODO: Implement `ADC A, d8`
+            0xCE => Some(Instruction::ImmedieteArithmetic(D8Operation::ADC)),
             0xCF => todo!(), // TODO: Implement `RST 08H`
 
             0xD0 => Some(Instruction::RET(JumpTest::NotCarry)),
@@ -444,15 +445,15 @@ impl Instruction {
             0xD3 => None, // Empty Byte
             0xD4 => Some(Instruction::CALL(JumpTest::NotCarry)),
             0xD5 => todo!(), // TODO: Implement `PUSH DE`
-            0xD6 => todo!(), // TODO: Implement `SUB d8`
+            0xD6 => Some(Instruction::ImmedieteArithmetic(D8Operation::SUB)),
             0xD7 => todo!(), // TODO: Implement `RST 10H`
             0xD8 => Some(Instruction::RET(JumpTest::Carry)),
             0xD9 => todo!(), // TODO: Implement `RETI`
             0xDA => Some(Instruction::JP(JumpTest::Carry)),
             0xDB => None, // Empty Byte
             0xDC => Some(Instruction::CALL(JumpTest::Carry)),
-            0xDD => None,    // Empty Byte
-            0xDE => todo!(), // TODO: Implement `SBC A, d8`
+            0xDD => None, // Empty Byte
+            0xDE => Some(Instruction::ImmedieteArithmetic(D8Operation::SBC)),
             0xDF => todo!(), // TODO: Implement `RST 18H`
 
             0xE0 => todo!(), // TODO: Implement `LDH (a8), A`
@@ -461,7 +462,7 @@ impl Instruction {
             0xE3 => None,    // Empty Byte
             0xE4 => None,    // Empty Byte
             0xE5 => todo!(), // TODO: Implement `PUSH HL`
-            0xE6 => todo!(), // TODO: Implement `AND d8`
+            0xE6 => Some(Instruction::ImmedieteArithmetic(D8Operation::AND)),
             0xE7 => todo!(), // TODO: Implement `RST 20H`
             0xE8 => todo!(), // TODO: Implement `ADD SP, r8`,
             0xE9 => todo!(), // TODO: Implement `JP HL`
@@ -469,7 +470,7 @@ impl Instruction {
             0xEB => None,    // Empty Byte
             0xEC => None,    // Empty Byte
             0xED => None,    // Empty Byte
-            0xEE => todo!(), // TODO: Implement `XOR d8`
+            0xEE => Some(Instruction::ImmedieteArithmetic(D8Operation::XOR)),
             0xEF => todo!(), // TODO: Implement `RST 28H`
 
             0xF0 => todo!(), // TODO: Implement `LDH A, (a8)`
@@ -478,7 +479,7 @@ impl Instruction {
             0xF3 => todo!(), // TODO: Implement `DI`
             0xF4 => None,    // Empty Byte
             0xF5 => todo!(), // TODO: Implement `PUSH AF`
-            0xF6 => todo!(), // TODO: Implement `OR d8`,
+            0xF6 => Some(Instruction::ImmedieteArithmetic(D8Operation::OR)),
             0xF7 => todo!(), // TODO: Implement `RST 30H`
             0xF8 => todo!(), // TODO: Implement `LD HL, SP + r8`
             0xF9 => todo!(), // TODO: Implement `LD SP, HL`
@@ -486,7 +487,7 @@ impl Instruction {
             0xFB => todo!(), // TODO: Implement `EI`
             0xFC => None,    // Empty Byte
             0xFD => None,    // Empty Byte
-            0xFE => todo!(), // TODO: Implement `CP d8`
+            0xFE => Some(Instruction::ImmedieteArithmetic(D8Operation::CP)),
             0xFF => todo!(), // TODO: Implement `RST 38H`
         }
     }
@@ -822,4 +823,15 @@ pub enum LoadByteSource {
 pub enum StackTarget {
     BC,
     // TODO: Add more targets
+}
+
+pub enum D8Operation {
+    ADD,
+    SUB,
+    AND,
+    OR,
+    ADC,
+    SBC,
+    XOR,
+    CP,
 }
