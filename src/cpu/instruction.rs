@@ -698,6 +698,22 @@ impl Instruction {
             0xBE => todo!(), // TODO: Implement `RES 7, (HL)`
             0xBF => Some(Instruction::RES(ArithmeticTarget::A, 7)),
 
+            0xC0 => Some(Instruction::SET(ArithmeticTarget::B, 0)),
+            0xC1 => Some(Instruction::SET(ArithmeticTarget::C, 0)),
+            0xC2 => Some(Instruction::SET(ArithmeticTarget::D, 0)),
+            0xC3 => Some(Instruction::SET(ArithmeticTarget::E, 0)),
+            0xC4 => Some(Instruction::SET(ArithmeticTarget::H, 0)),
+            0xC5 => Some(Instruction::SET(ArithmeticTarget::L, 0)),
+            0xC6 => todo!(), // TODO: Implement `SET 0, (HL)`
+            0xC7 => Some(Instruction::SET(ArithmeticTarget::A, 0)),
+            0xC8 => Some(Instruction::SET(ArithmeticTarget::B, 1)),
+            0xC9 => Some(Instruction::SET(ArithmeticTarget::C, 1)),
+            0xCA => Some(Instruction::SET(ArithmeticTarget::D, 1)),
+            0xCB => Some(Instruction::SET(ArithmeticTarget::E, 1)),
+            0xCC => Some(Instruction::SET(ArithmeticTarget::H, 1)),
+            0xCD => Some(Instruction::SET(ArithmeticTarget::L, 1)),
+            0xCE => todo!(), // TODO: Implement `SET 1, (HL)`
+
             _ => todo!()
         }
     }
