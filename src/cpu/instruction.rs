@@ -732,6 +732,23 @@ impl Instruction {
             0xDE => todo!(), // TODO: Implement `SET 3, (HL)`
             0xDF => Some(Instruction::SET(ArithmeticTarget::A, 3)),
 
+            0xE0 => Some(Instruction::SET(ArithmeticTarget::B, 4)),
+            0xE1 => Some(Instruction::SET(ArithmeticTarget::C, 4)),
+            0xE2 => Some(Instruction::SET(ArithmeticTarget::D, 4)),
+            0xE3 => Some(Instruction::SET(ArithmeticTarget::E, 4)),
+            0xE4 => Some(Instruction::SET(ArithmeticTarget::H, 4)),
+            0xE5 => Some(Instruction::SET(ArithmeticTarget::L, 4)),
+            0xE6 => todo!(), // TODO: Implement `SET 4, (HL)`
+            0xE7 => Some(Instruction::SET(ArithmeticTarget::A, 4)),
+            0xE8 => Some(Instruction::SET(ArithmeticTarget::B, 5)),
+            0xE9 => Some(Instruction::SET(ArithmeticTarget::C, 5)),
+            0xEA => Some(Instruction::SET(ArithmeticTarget::D, 5)),
+            0xEB => Some(Instruction::SET(ArithmeticTarget::E, 5)),
+            0xEC => Some(Instruction::SET(ArithmeticTarget::H, 5)),
+            0xED => Some(Instruction::SET(ArithmeticTarget::L, 5)),
+            0xEE => todo!(), // TODO: Implement `SET 5, (HL)`
+            0xEF => Some(Instruction::SET(ArithmeticTarget::A, 5)),
+
             _ => todo!()
         }
     }
