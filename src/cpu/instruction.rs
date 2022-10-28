@@ -628,6 +628,7 @@ impl Instruction {
             0x7C => Some(Instruction::BIT(ArithmeticTarget::H, 7)),
             0x7D => Some(Instruction::BIT(ArithmeticTarget::L, 7)),
             0x7E => todo!(), // TODO: Implement `BIT 7, (HL)`
+            0x7F => Some(Instruction::BIT(ArithmeticTarget::A, 7)),
 
             0x80 => Some(Instruction::RES(ArithmeticTarget::B, 0)),
             0x81 => Some(Instruction::RES(ArithmeticTarget::C, 0)),
