@@ -713,6 +713,24 @@ impl Instruction {
             0xCC => Some(Instruction::SET(ArithmeticTarget::H, 1)),
             0xCD => Some(Instruction::SET(ArithmeticTarget::L, 1)),
             0xCE => todo!(), // TODO: Implement `SET 1, (HL)`
+            0xCF => Some(Instruction::SET(ArithmeticTarget::A, 1)),
+
+            0xD0 => Some(Instruction::SET(ArithmeticTarget::B, 2)),
+            0xD1 => Some(Instruction::SET(ArithmeticTarget::C, 2)),
+            0xD2 => Some(Instruction::SET(ArithmeticTarget::D, 2)),
+            0xD3 => Some(Instruction::SET(ArithmeticTarget::E, 2)),
+            0xD4 => Some(Instruction::SET(ArithmeticTarget::H, 2)),
+            0xD5 => Some(Instruction::SET(ArithmeticTarget::L, 2)),
+            0xD6 => todo!(), // TODO: Implement `SET 2, (HL)`
+            0xD7 => Some(Instruction::SET(ArithmeticTarget::A, 2)),
+            0xD8 => Some(Instruction::SET(ArithmeticTarget::B, 3)),
+            0xD9 => Some(Instruction::SET(ArithmeticTarget::C, 3)),
+            0xDA => Some(Instruction::SET(ArithmeticTarget::D, 3)),
+            0xDB => Some(Instruction::SET(ArithmeticTarget::E, 3)),
+            0xDC => Some(Instruction::SET(ArithmeticTarget::H, 3)),
+            0xDD => Some(Instruction::SET(ArithmeticTarget::L, 3)),
+            0xDE => todo!(), // TODO: Implement `SET 3, (HL)`
+            0xDF => Some(Instruction::SET(ArithmeticTarget::A, 3)),
 
             _ => todo!()
         }
