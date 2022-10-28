@@ -613,6 +613,22 @@ impl Instruction {
             0x6E => todo!(), // TODO: Implement `BIT 5, (HL)`
             0x6F => Some(Instruction::BIT(ArithmeticTarget::A, 5)),
 
+            0x70 => Some(Instruction::BIT(ArithmeticTarget::B, 6)),
+            0x71 => Some(Instruction::BIT(ArithmeticTarget::C, 6)),
+            0x72 => Some(Instruction::BIT(ArithmeticTarget::D, 6)),
+            0x73 => Some(Instruction::BIT(ArithmeticTarget::E, 6)),
+            0x74 => Some(Instruction::BIT(ArithmeticTarget::H, 6)),
+            0x75 => Some(Instruction::BIT(ArithmeticTarget::L, 6)),
+            0x76 => todo!(), // TODO: Implement `BIT 6, (HL)`
+            0x77 => Some(Instruction::BIT(ArithmeticTarget::A, 6)),
+            0x78 => Some(Instruction::BIT(ArithmeticTarget::B, 7)),
+            0x79 => Some(Instruction::BIT(ArithmeticTarget::C, 7)),
+            0x7A => Some(Instruction::BIT(ArithmeticTarget::D, 7)),
+            0x7B => Some(Instruction::BIT(ArithmeticTarget::E, 7)),
+            0x7C => Some(Instruction::BIT(ArithmeticTarget::H, 7)),
+            0x7D => Some(Instruction::BIT(ArithmeticTarget::L, 7)),
+            0x7E => todo!(), // TODO: Implement `BIT 7, (HL)`
+
             _ => todo!()
         }
     }
