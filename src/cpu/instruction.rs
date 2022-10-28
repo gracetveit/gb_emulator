@@ -493,7 +493,6 @@ impl Instruction {
 
     fn from_byte_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
-            // TODO: Implement prefixed Opcodes
             0x00 => Some(Instruction::RLC(ArithmeticTarget::B)),
             0x01 => Some(Instruction::RLC(ArithmeticTarget::C)),
             0x02 => Some(Instruction::RLC(ArithmeticTarget::D)),
@@ -749,7 +748,22 @@ impl Instruction {
             0xEE => todo!(), // TODO: Implement `SET 5, (HL)`
             0xEF => Some(Instruction::SET(ArithmeticTarget::A, 5)),
 
-            _ => todo!()
+            0xF0 => Some(Instruction::SET(ArithmeticTarget::B, 6)),
+            0xF1 => Some(Instruction::SET(ArithmeticTarget::C, 6)),
+            0xF2 => Some(Instruction::SET(ArithmeticTarget::D, 6)),
+            0xF3 => Some(Instruction::SET(ArithmeticTarget::E, 6)),
+            0xF4 => Some(Instruction::SET(ArithmeticTarget::H, 6)),
+            0xF5 => Some(Instruction::SET(ArithmeticTarget::L, 6)),
+            0xF6 => todo!(), // TODO: Implement `SET 6, (HL)`
+            0xF7 => Some(Instruction::SET(ArithmeticTarget::A, 6)),
+            0xF8 => Some(Instruction::SET(ArithmeticTarget::B, 7)),
+            0xF9 => Some(Instruction::SET(ArithmeticTarget::C, 7)),
+            0xFA => Some(Instruction::SET(ArithmeticTarget::D, 7)),
+            0xFB => Some(Instruction::SET(ArithmeticTarget::E, 7)),
+            0xFC => Some(Instruction::SET(ArithmeticTarget::H, 7)),
+            0xFD => Some(Instruction::SET(ArithmeticTarget::L, 7)),
+            0xFE => todo!(), // TODO: Implement `SET 7, (HL)`
+            0xFF => Some(Instruction::SET(ArithmeticTarget::A, 7)),
         }
     }
 }
