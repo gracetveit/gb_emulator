@@ -543,37 +543,37 @@ impl CPU {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
                     self.bit(value, n);
-                    self.pc.wrapping_add(1)
+                    self.pc.wrapping_add(2)
                 }
                 ArithmeticTarget::B => {
                     let value = self.registers.b;
                     self.bit(value, n);
-                    self.pc.wrapping_add(1)
+                    self.pc.wrapping_add(2)
                 }
                 ArithmeticTarget::C => {
                     let value = self.registers.c;
                     self.bit(value, n);
-                    self.pc.wrapping_add(1)
+                    self.pc.wrapping_add(2)
                 }
                 ArithmeticTarget::D => {
                     let value = self.registers.d;
                     self.bit(value, n);
-                    self.pc.wrapping_add(1)
+                    self.pc.wrapping_add(2)
                 }
                 ArithmeticTarget::E => {
                     let value = self.registers.e;
                     self.bit(value, n);
-                    self.pc.wrapping_add(1)
+                    self.pc.wrapping_add(2)
                 }
                 ArithmeticTarget::H => {
                     let value = self.registers.h;
                     self.bit(value, n);
-                    self.pc.wrapping_add(1)
+                    self.pc.wrapping_add(2)
                 }
                 ArithmeticTarget::L => {
                     let value = self.registers.l;
                     self.bit(value, n);
-                    self.pc.wrapping_add(1)
+                    self.pc.wrapping_add(2)
                 }
             },
             Instruction::RES(target, n) => match target {
