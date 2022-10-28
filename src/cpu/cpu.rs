@@ -8,7 +8,7 @@ use super::{
 };
 
 pub struct CPU {
-    pub registers: Registers,
+    registers: Registers,
     pc: u16,
     sp: u16,
     bus: MemoryBus,
@@ -16,7 +16,7 @@ pub struct CPU {
 }
 
 impl CPU {
-    fn step(&mut self) {
+    pub fn step(&mut self) {
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;
         if prefixed {
@@ -39,7 +39,7 @@ impl CPU {
         // TODO: Make sure all prefixed instructions jump 2 instead of one
     }
 
-    pub fn execute(&mut self, instruction: Instruction) -> u16 {
+    fn execute(&mut self, instruction: Instruction) -> u16 {
         if self.is_halted {
             return self.pc;
         }
@@ -1410,6 +1410,7 @@ impl CPU {
     }
 }
 
+#[cfg(test)]
 fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> CPU {
     // let test_bus = [8u; 0xFFF].default()
     CPU {
