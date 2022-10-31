@@ -1432,14 +1432,14 @@ impl CPU {
     fn add_half_carry (x: u16, y:u16, is_eight: bool) -> bool {
         match is_eight {
             true => (x & 0xF) + (y & 0xF) >= 0xF,
-            false => ((x >> 8) & 0xF) + ((y >> 8) & 0xF) >= 0xF
+            false => (x & 0xFFF) + (y & 0xFFF) >= 0xFF
         }
     }
 
     fn sub_half_carry (x: u16, y: u16, is_eight: bool) -> bool {
         match is_eight {
-            true => ((x >> 4) + 0x10) - (y >> 4) > 0x10,
-            false => ((x >> 12) + 0x10) - (y >> 12) > 0x10
+            true => (x & 0xF) < (y & 0xF),
+            false => (x & 0xFFF) < (y & 0xFFF)
         }
     }
 
@@ -1539,12 +1539,12 @@ impl CPU {
 
     fn sbc(&mut self, value: u8) -> u8 {
         // TODO: Fix half carry
-        let (new_value, did_overflow) = self.registers.a.overflowing_sub(value);
+        let new_value = self.registers.a.wrapping_sub(value);
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
         self.registers.f.half_carry = CPU::sub_half_carry(self.registers.a as u16, value as u16, true);
-        self.registers.f.carry = did_overflow;
+        self.registers.f.carry = value > self.registers.a;
 
         match self.registers.f.carry {
             true => new_value - 1,
@@ -1828,14 +1828,15 @@ fn test_sub() {
     assert_eq!(test_cpu.registers.f.carry, false)
 }
 
-// #[test]
-// fn test_sbc() {
-//     let mut test_cpu = create_cpu(0u8, 5, FlagsRegister::from(0));
+#[test]
+fn test_sbc() {
+    let mut test_cpu = create_cpu(0x0, 0x10, FlagsRegister::from(0));
 
-//     test_cpu.execute(Instruction::SBC(ArithmeticTarget::B));
+    test_cpu.execute(Instruction::SBC(ArithmeticTarget::B));
 
-//     assert_eq!(test_cpu.registers.a, 251);
-// }
+    assert_eq!(test_cpu.registers.a, 239);
+    assert_eq!(u8::from(test_cpu.registers.f), 0x50)
+}
 
 #[test]
 fn test_and() {
@@ -2248,7 +2249,8 @@ fn half_carry_add_test() {
 
 #[test]
 fn half_carry_sub_test() {
-    let x = 0b10000000;
-    let y = 0b00010000;
+    let x:u8 = 0;
+    let y:u8 = 0xF;
     assert_eq!(CPU::sub_half_carry(x as u16, y as u16, true), true)
+    // let x_16 = 0
 }
