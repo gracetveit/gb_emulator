@@ -52,7 +52,10 @@ impl Instruction {
         match byte {
             0x00 => Some(Instruction::NOP),
             0x01 => todo!(), // TODO: Implement `LD BC, d16`
-            0x02 => todo!(), // TODO: Implement `LD (BC), A`
+            0x02 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::BC,
+                LoadByteSource::A,
+            ))),
             0x03 => todo!(), // TODO: Implement `INC BC`
             0x04 => Some(Instruction::INC(ArithmeticTarget::B)),
             0x05 => Some(Instruction::DEC(ArithmeticTarget::B)),
@@ -63,7 +66,10 @@ impl Instruction {
             0x07 => todo!(), // TODO: Implement `RLCA`
             0x08 => todo!(), // TODO: Implement `LD (a16), SP`
             0x09 => todo!(), // TODO: Implement `ADD HL, BC`
-            0x0A => todo!(), // TODO: Implement `LD A, (BC)`
+            0x0A => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::BC,
+            ))),
             0x0B => todo!(), // TODO: Implement `DEC BC`
             0x0C => Some(Instruction::INC(ArithmeticTarget::C)),
             0x0D => Some(Instruction::DEC(ArithmeticTarget::C)),
@@ -75,7 +81,10 @@ impl Instruction {
 
             0x10 => todo!(), // TODO: Implement `STOP d8`
             0x11 => todo!(), // TODO Implement `LD DE, d16`
-            0x12 => todo!(), // TODO Implement `LD (DE), A`
+            0x12 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::DE,
+                LoadByteSource::A,
+            ))),
             0x13 => todo!(), // TODO Implement `INC DE`
             0x14 => Some(Instruction::INC(ArithmeticTarget::D)),
             0x15 => Some(Instruction::DEC(ArithmeticTarget::D)),
@@ -86,7 +95,10 @@ impl Instruction {
             0x17 => Some(Instruction::RLA),
             0x18 => todo!(), // TODO Implement `JR r8`
             0x19 => todo!(), // TODO Implement `ADD HL, DE`
-            0x1A => todo!(), // TODO: Implement `LD A, (DE)`
+            0x1A => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::DE,
+            ))),
             0x1B => todo!(), // TODO: Implement `DEC DE`
             0x1C => Some(Instruction::INC(ArithmeticTarget::E)),
             0x1D => Some(Instruction::DEC(ArithmeticTarget::E)),
@@ -98,7 +110,10 @@ impl Instruction {
 
             0x20 => todo!(), // TODO: Implement `JR NZ, r8`
             0x21 => todo!(), // TODO: Implement `LD HL, d16`
-            0x22 => todo!(), // TODO: Implement `LD (HL+), A`
+            0x22 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::A,
+            ))),
             0x23 => todo!(), // TODO: Implement `INC HL`
             0x24 => Some(Instruction::INC(ArithmeticTarget::H)),
             0x25 => Some(Instruction::DEC(ArithmeticTarget::H)),
@@ -109,7 +124,10 @@ impl Instruction {
             0x27 => todo!(), // TODO: Implement `DAA`
             0x28 => todo!(), // TODO: Implement `JR Z, r8`
             0x29 => todo!(), // TODO: Implement `ADD HL, HL`
-            0x2A => todo!(), // TODO: Implement `LD A, (HL+)`
+            0x2A => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::HLI,
+            ))),
             0x2B => todo!(), // TODO: Implement `DEC HL`
             0x2C => Some(Instruction::INC(ArithmeticTarget::L)),
             0x2D => Some(Instruction::DEC(ArithmeticTarget::L)),
@@ -121,15 +139,24 @@ impl Instruction {
 
             0x30 => todo!(), // TODO: Implement `JR NC, r8`
             0x31 => todo!(), // TODO: Implement `LD SP, d16`
-            0x32 => todo!(), // TODO: Implement `LD (HL-), A`
+            0x32 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLD,
+                LoadByteSource::A,
+            ))),
             0x33 => todo!(), // TODO: Implement `INC SP`
             0x34 => Some(Instruction::INC(ArithmeticTarget::HL)),
             0x35 => Some(Instruction::DEC(ArithmeticTarget::HL)),
-            0x36 => todo!(), // TODO: Implement `LD (HL), d8`
+            0x36 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::D8,
+            ))),
             0x37 => Some(Instruction::SCF),
             0x38 => todo!(), // TODO: Implement `JR C, r8`
             0x39 => todo!(), // TODO: Implement `ADD HL, SP`
-            0x3A => todo!(), // TODO: Implement `LD A, (HL-)`
+            0x3A => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::HLD,
+            ))),
             0x3B => todo!(), // TODO: Implement `DEC SP`
             0x3C => Some(Instruction::INC(ArithmeticTarget::A)),
             0x3D => Some(Instruction::DEC(ArithmeticTarget::A)),
@@ -163,7 +190,10 @@ impl Instruction {
                 LoadByteTarget::B,
                 LoadByteSource::L,
             ))),
-            0x46 => todo!(), // TODO: Implement `LD B, (HL)`
+            0x46 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::HL,
+            ))),
             0x47 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::B,
                 LoadByteSource::A,
@@ -192,7 +222,10 @@ impl Instruction {
                 LoadByteTarget::C,
                 LoadByteSource::L,
             ))),
-            0x4E => todo!(), //TODO: Implement `LD C, (HL)`
+            0x4E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::HL,
+            ))),
             0x4F => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::C,
                 LoadByteSource::A,
@@ -222,7 +255,10 @@ impl Instruction {
                 LoadByteTarget::D,
                 LoadByteSource::L,
             ))),
-            0x56 => todo!(), // TODO: Implement `LD D, (HL)`
+            0x56 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::HL,
+            ))),
             0x57 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::D,
                 LoadByteSource::A,
@@ -251,7 +287,10 @@ impl Instruction {
                 LoadByteTarget::E,
                 LoadByteSource::L,
             ))),
-            0x5E => todo!(), // TODO: Implement `LD E, (HL)`
+            0x5E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::HL,
+            ))),
             0x5F => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::E,
                 LoadByteSource::A,
@@ -281,7 +320,10 @@ impl Instruction {
                 LoadByteTarget::H,
                 LoadByteSource::L,
             ))),
-            0x66 => todo!(), // TODO: Implement `LD H, (HL)`
+            0x66 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::HL,
+            ))),
             0x67 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::H,
                 LoadByteSource::A,
@@ -310,20 +352,44 @@ impl Instruction {
                 LoadByteTarget::L,
                 LoadByteSource::L,
             ))),
-            0x6E => todo!(), // TODO: Implement `LD L, (HL)`
+            0x6E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::HL,
+            ))),
             0x6F => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::L,
                 LoadByteSource::A,
             ))),
 
-            0x70 => todo!(), // TODO: Implement `LD (HL), B`
-            0x71 => todo!(), // TODO: Implement `LD (HL), C`
-            0x72 => todo!(), // TODO: Implement `LD (HL), D`
-            0x73 => todo!(), // TODO: Implement `LD (HL), E`
-            0x74 => todo!(), // TODO: Implement `LD (HL), H`
-            0x75 => todo!(), // TODO: Implement `LD (HL), L`
+            0x70 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::B,
+            ))),
+            0x71 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::C,
+            ))),
+            0x72 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::D,
+            ))),
+            0x73 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::E,
+            ))),
+            0x74 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::H,
+            ))),
+            0x75 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::L,
+            ))),
             0x76 => Some(Instruction::HALT),
-            0x77 => todo!(), // TODO: Implement `LD (HL), A`
+            0x77 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HL,
+                LoadByteSource::A,
+            ))),
             0x78 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::B,
@@ -456,9 +522,15 @@ impl Instruction {
             0xDE => Some(Instruction::ImmedieteArithmetic(D8Operation::SBC)),
             0xDF => todo!(), // TODO: Implement `RST 18H`
 
-            0xE0 => todo!(), // TODO: Implement `LDH (a8), A`
+            0xE0 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A8,
+                LoadByteSource::A,
+            ))),
             0xE1 => todo!(), // TODO: Implement `POP HL`
-            0xE2 => todo!(), // TODO: Implement `LD (C), A`
+            0xE2 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::RefC,
+                LoadByteSource::A,
+            ))),
             0xE3 => None,    // Empty Byte
             0xE4 => None,    // Empty Byte
             0xE5 => todo!(), // TODO: Implement `PUSH HL`
@@ -466,16 +538,25 @@ impl Instruction {
             0xE7 => todo!(), // TODO: Implement `RST 20H`
             0xE8 => todo!(), // TODO: Implement `ADD SP, r8`,
             0xE9 => todo!(), // TODO: Implement `JP HL`
-            0xEA => todo!(), // TODO: Implement `LD (a16), A`
-            0xEB => None,    // Empty Byte
-            0xEC => None,    // Empty Byte
-            0xED => None,    // Empty Byte
+            0xEA => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A16,
+                LoadByteSource::A,
+            ))),
+            0xEB => None, // Empty Byte
+            0xEC => None, // Empty Byte
+            0xED => None, // Empty Byte
             0xEE => Some(Instruction::ImmedieteArithmetic(D8Operation::XOR)),
             0xEF => todo!(), // TODO: Implement `RST 28H`
 
-            0xF0 => todo!(), // TODO: Implement `LDH A, (a8)`
+            0xF0 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::A8,
+            ))),
             0xF1 => todo!(), // TODO: Implement `POP AF`
-            0xF2 => todo!(), // TODO: Implement `LD A, (C)`
+            0xF2 => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::RefC,
+            ))),
             0xF3 => todo!(), // TODO: Implement `DI`
             0xF4 => None,    // Empty Byte
             0xF5 => todo!(), // TODO: Implement `PUSH AF`
@@ -483,7 +564,10 @@ impl Instruction {
             0xF7 => todo!(), // TODO: Implement `RST 30H`
             0xF8 => todo!(), // TODO: Implement `LD HL, SP + r8`
             0xF9 => todo!(), // TODO: Implement `LD SP, HL`
-            0xFA => todo!(), // TODO: Implement `LD A, (a16)`
+            0xFA => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::A16,
+            ))),
             0xFB => todo!(), // TODO: Implement `EI`
             0xFC => None,    // Empty Byte
             0xFD => None,    // Empty Byte
@@ -805,7 +889,14 @@ pub enum LoadByteTarget {
     E,
     H,
     L,
+    HL,
     HLI,
+    HLD,
+    BC,
+    DE,
+    RefC,
+    A16,
+    A8,
 }
 
 pub enum LoadByteSource {
@@ -817,7 +908,14 @@ pub enum LoadByteSource {
     H,
     L,
     D8,
+    HL,
     HLI,
+    HLD,
+    BC,
+    DE,
+    RefC,
+    A16,
+    A8,
 }
 
 pub enum StackTarget {

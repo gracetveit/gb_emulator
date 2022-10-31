@@ -1,8 +1,7 @@
 use super::{
     instruction::{
-        ArithmeticTarget, Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType,
-        StackTarget,
-        D8Operation
+        ArithmeticTarget, D8Operation, Instruction, JumpTest, LoadByteSource, LoadByteTarget,
+        LoadType, StackTarget,
     },
     memory_bus::MemoryBus,
     registers::{FlagsRegister, Registers},
@@ -37,7 +36,6 @@ impl CPU {
         };
 
         self.pc = next_pc;
-        // TODO: Make sure all prefixed instructions jump 2 instead of one
     }
 
     fn execute(&mut self, instruction: Instruction) -> u16 {
@@ -1198,7 +1196,7 @@ impl CPU {
                     self.registers.a = new_value;
                     self.pc.wrapping_add(2)
                 }
-            }
+            },
             Instruction::JP(test) => {
                 let jump_condition = match test {
                     JumpTest::NotZero => !self.registers.f.zero,
@@ -1212,13 +1210,98 @@ impl CPU {
             Instruction::LD(load_type) => match load_type {
                 LoadType::Byte(target, source) => {
                     let source_value = match source {
-                        _ => { /* TODO: implement other sources */ }
+                        LoadByteSource::A => self.registers.a,
+                        LoadByteSource::B => self.registers.b,
+                        LoadByteSource::C => self.registers.c,
+                        LoadByteSource::D => self.registers.d,
+                        LoadByteSource::E => self.registers.e,
+                        LoadByteSource::H => self.registers.h,
+                        LoadByteSource::L => self.registers.l,
+                        LoadByteSource::HL => self.bus.read_byte(self.registers.get_hl()),
+                        LoadByteSource::D8 => self.bus.read_byte(self.pc.wrapping_add(1)),
+                        LoadByteSource::HLI => {
+                            let value = self.bus.read_byte(self.registers.get_hl());
+
+                            self.registers
+                                .set_hl(self.registers.get_hl().wrapping_add(1));
+
+                            value
+                        }
+                        LoadByteSource::HLD => {
+                            let value = self.bus.read_byte(self.registers.get_hl());
+
+                            self.registers
+                                .set_hl(self.registers.get_hl().wrapping_sub(1));
+
+                            value
+                        }
+                        LoadByteSource::BC => self.bus.read_byte(self.registers.get_bc()),
+                        LoadByteSource::DE => self.bus.read_byte(self.registers.get_de()),
+                        LoadByteSource::RefC => {
+                            let value = self.registers.c as u16;
+                            self.bus.read_byte(value.wrapping_add(0xFF00))
+                        }
+                        LoadByteSource::A16 => {
+                            let ls_byte = self.bus.read_byte(self.pc + 1) as u16;
+                            let ms_byte = self.bus.read_byte(self.pc + 2) as u16;
+                            let addr = ms_byte << 8 | ls_byte;
+                            self.bus.read_byte(addr)
+                        }
+                        LoadByteSource::A8 => {
+                            let value = self.bus.read_byte(self.pc + 1) as u16;
+                            self.bus.read_byte(value.wrapping_add(0xFF00))
+                        }
                     };
                     match target {
-                        _ => { /* TODO: implement other targets */ }
+                        LoadByteTarget::A => self.registers.a = source_value,
+                        LoadByteTarget::B => self.registers.b = source_value,
+                        LoadByteTarget::C => self.registers.c = source_value,
+                        LoadByteTarget::D => self.registers.d = source_value,
+                        LoadByteTarget::E => self.registers.e = source_value,
+                        LoadByteTarget::H => self.registers.h = source_value,
+                        LoadByteTarget::L => self.registers.l = source_value,
+                        LoadByteTarget::HL => {
+                            self.bus.write_byte(self.registers.get_hl(), source_value)
+                        }
+                        LoadByteTarget::HLI => {
+                            self.bus.write_byte(self.registers.get_hl(), source_value);
+                            self.registers
+                                .set_hl(self.registers.get_hl().wrapping_add(1));
+                        }
+                        LoadByteTarget::HLD => {
+                            self.bus.write_byte(self.registers.get_hl(), source_value);
+                            self.registers
+                                .set_hl(self.registers.get_hl().wrapping_sub(1));
+                        }
+                        LoadByteTarget::BC => {
+                            self.bus.write_byte(self.registers.get_bc(), source_value);
+                        }
+                        LoadByteTarget::DE => {
+                            self.bus.write_byte(self.registers.get_de(), source_value);
+                        }
+                        LoadByteTarget::RefC => {
+                            let c_addr = self.registers.c as u16;
+                            self.bus
+                                .write_byte(c_addr.wrapping_add(0xFF00), source_value);
+                        }
+                        LoadByteTarget::A16 => {
+                            let ls_byte = self.bus.read_byte(self.pc + 1) as u16;
+                            let ms_byte = self.bus.read_byte(self.pc + 2) as u16;
+                            let addr = ms_byte << 8 | ls_byte;
+                            self.bus.write_byte(addr, source_value);
+                        }
+                        LoadByteTarget::A8 => {
+                            let c_addr = self.bus.read_byte(self.pc + 1) as u16;
+                            self.bus
+                                .write_byte(c_addr.wrapping_add(0xFF00), source_value);
+                        }
                     };
-                    match source {
-                        LoadByteSource::D8 => self.pc.wrapping_add(2),
+                    match (target, source) {
+                        (_, LoadByteSource::D8) => self.pc.wrapping_add(2),
+                        (LoadByteTarget::A16, _) => self.pc.wrapping_add(3),
+                        (_, LoadByteSource::A16) => self.pc.wrapping_add(3),
+                        (LoadByteTarget::A8, _) => self.pc.wrapping_add(2),
+                        (_, LoadByteSource::A8) => self.pc.wrapping_add(2),
                         _ => self.pc.wrapping_add(1),
                     }
                 }
