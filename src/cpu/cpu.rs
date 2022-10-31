@@ -4,7 +4,7 @@ use super::{
         LoadType, SixteenBitArithmeticTarget, StackTarget,
     },
     memory_bus::MemoryBus,
-    registers::{FlagsRegister, Registers, self},
+    registers::{self, FlagsRegister, Registers},
 };
 
 pub struct CPU {
@@ -1382,6 +1382,16 @@ impl CPU {
                         self.sp = value;
                         self.pc.wrapping_add(3)
                     }
+                },
+                LoadType::AddressFromSP => {
+                    let addr = self.read_next_word();
+                    let ls_byte: u8 = self.sp as u8 & 0xFF;
+                    let ms_byte: u8 = self.sp as u8 >> 8;
+
+                    self.bus.write_byte(addr, ls_byte);
+                    self.bus.write_byte(addr.wrapping_add(1), ms_byte);
+
+                    self.pc.wrapping_add(3)
                 }
             },
             Instruction::PUSH(target) => {
@@ -1454,17 +1464,17 @@ impl CPU {
         }
     }
 
-    fn add_half_carry (x: u16, y:u16, is_eight: bool) -> bool {
+    fn add_half_carry(x: u16, y: u16, is_eight: bool) -> bool {
         match is_eight {
             true => (x & 0xF) + (y & 0xF) >= 0xF,
-            false => (x & 0xFFF) + (y & 0xFFF) >= 0xFF
+            false => (x & 0xFFF) + (y & 0xFFF) >= 0xFF,
         }
     }
 
-    fn sub_half_carry (x: u16, y: u16, is_eight: bool) -> bool {
+    fn sub_half_carry(x: u16, y: u16, is_eight: bool) -> bool {
         match is_eight {
             true => (x & 0xF) < (y & 0xF),
-            false => (x & 0xFFF) < (y & 0xFFF)
+            false => (x & 0xFFF) < (y & 0xFFF),
         }
     }
 
@@ -1523,7 +1533,8 @@ impl CPU {
         // Half Cary is set if adding the lower nibbles of the value and register A
         // together result in a value bigger than 0xF (16). If the result is larger than 0xF
         // then the addition caused a carry from the lower nibble to the upper nibble
-        self.registers.f.half_carry = CPU::add_half_carry(value as u16, self.registers.a as u16, true);
+        self.registers.f.half_carry =
+            CPU::add_half_carry(value as u16, self.registers.a as u16, true);
         self.registers.f.carry = did_overflow;
         new_value
     }
@@ -1544,7 +1555,8 @@ impl CPU {
         let (new_value, did_overflow) = self.registers.a.overflowing_add(value);
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
-        self.registers.f.half_carry = CPU::add_half_carry(self.registers.a as u16, value as u16, true);
+        self.registers.f.half_carry =
+            CPU::add_half_carry(self.registers.a as u16, value as u16, true);
         self.registers.f.carry = did_overflow;
         match self.registers.f.carry {
             true => new_value + 1,
@@ -1557,7 +1569,8 @@ impl CPU {
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
-        self.registers.f.half_carry = CPU::sub_half_carry(self.registers.a as u16, value as u16, true);
+        self.registers.f.half_carry =
+            CPU::sub_half_carry(self.registers.a as u16, value as u16, true);
         self.registers.f.carry = did_overflow;
 
         new_value
@@ -1569,7 +1582,8 @@ impl CPU {
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
-        self.registers.f.half_carry = CPU::sub_half_carry(self.registers.a as u16, value as u16, true);
+        self.registers.f.half_carry =
+            CPU::sub_half_carry(self.registers.a as u16, value as u16, true);
         self.registers.f.carry = value > self.registers.a;
 
         match self.registers.f.carry {
@@ -2273,8 +2287,8 @@ fn half_carry_add_test() {
 
 #[test]
 fn half_carry_sub_test() {
-    let x:u8 = 0;
-    let y:u8 = 0xF;
+    let x: u8 = 0;
+    let y: u8 = 0xF;
     assert_eq!(CPU::sub_half_carry(x as u16, y as u16, true), true)
     // let x_16 = 0
 }
