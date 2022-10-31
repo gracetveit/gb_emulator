@@ -578,7 +578,7 @@ impl Instruction {
             0xF6 => Some(Instruction::ImmedieteArithmetic(D8Operation::OR)),
             0xF7 => todo!(), // TODO: Implement `RST 30H`
             0xF8 => Some(Instruction::LD(LoadType::HLFromSPN)),
-            0xF9 => todo!(), // TODO: Implement `LD SP, HL`
+            0xF9 => Some(Instruction::LD(LoadType::SPFromHL)),
             0xFA => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::A16,
@@ -898,6 +898,7 @@ pub enum LoadType {
     SixteenBitFromAddress(SixteenBitArithmeticTarget),
     AddressFromSP,
     HLFromSPN,
+    SPFromHL,
     // TODO: Add remaining types
     // Word
     // AFromIndirect

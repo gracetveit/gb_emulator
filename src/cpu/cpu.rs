@@ -1400,6 +1400,11 @@ impl CPU {
 
                     self.pc.wrapping_add(2)
                 }
+                LoadType::SPFromHL => {
+                    self.sp = self.registers.get_hl();
+
+                    self.pc.wrapping_add(1)
+                }
             },
             Instruction::PUSH(target) => {
                 let value = match target {
