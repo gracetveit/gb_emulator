@@ -1393,6 +1393,13 @@ impl CPU {
 
                     self.pc.wrapping_add(3)
                 }
+                LoadType::HLFromSPN => {
+                    let value = self.addsp();
+
+                    self.registers.set_hl(value);
+
+                    self.pc.wrapping_add(2)
+                }
             },
             Instruction::PUSH(target) => {
                 let value = match target {
@@ -1432,32 +1439,7 @@ impl CPU {
                 self.pc.wrapping_add(1)
             }
             Instruction::ADDSP => {
-                // Identify if n is negative or positive
-                let (n, is_positive) = CPU::sign(self.bus.read_byte(self.pc.wrapping_add(1)));
-                // grab the unsigned value from the 'signed' n
-                // depending on the operation, add or subtract n from sp
-                match is_positive {
-                    true => {
-                        let (new_value, did_overflow) = self.sp.overflowing_add(n as u16);
-
-                        self.registers.f.half_carry = CPU::add_half_carry(self.sp, n as u16, false);
-                        self.registers.f.carry = did_overflow;
-
-                        self.sp = new_value;
-                    }
-                    false => {
-                        let (new_value, did_overflow) = self.sp.overflowing_sub(n as u16);
-
-                        self.registers.f.half_carry = CPU::sub_half_carry(self.sp, n as u16, false);
-                        self.registers.f.carry = did_overflow;
-
-                        self.sp = new_value
-                    }
-                }
-                // set flags
-
-                self.registers.f.zero = false;
-                self.registers.f.subtract = false;
+                self.sp = self.addsp();
 
                 self.pc.wrapping_add(2)
             }
@@ -1800,6 +1782,36 @@ impl CPU {
         } else {
             self.pc.wrapping_add(3)
         }
+    }
+
+    fn addsp(&mut self) -> u16 {
+        // Identify if n is negative or positive
+        let (n, is_positive) = CPU::sign(self.bus.read_byte(self.pc.wrapping_add(1)));
+        // grab the unsigned value from the 'signed' n
+        // depending on the operation, add or subtract n from sp
+        match is_positive {
+            true => {
+                let (new_value, did_overflow) = self.sp.overflowing_add(n as u16);
+
+                self.registers.f.zero = false;
+                self.registers.f.subtract = false;
+                self.registers.f.half_carry = CPU::add_half_carry(self.sp, n as u16, false);
+                self.registers.f.carry = did_overflow;
+
+                new_value
+            }
+            false => {
+                let (new_value, did_overflow) = self.sp.overflowing_sub(n as u16);
+
+                self.registers.f.zero = false;
+                self.registers.f.subtract = false;
+                self.registers.f.half_carry = CPU::sub_half_carry(self.sp, n as u16, false);
+                self.registers.f.carry = did_overflow;
+
+                new_value
+            }
+        }
+        // set flags
     }
 }
 
