@@ -4,7 +4,7 @@ use super::{
         LoadType, SixteenBitArithmeticTarget, StackTarget,
     },
     memory_bus::MemoryBus,
-    registers::{FlagsRegister, Registers},
+    registers::{FlagsRegister, Registers, self},
 };
 
 pub struct CPU {
@@ -1412,17 +1412,24 @@ impl CPU {
                     true => {
                         let (new_value, did_overflow) = self.sp.overflowing_add(n as u16);
 
-                        self.registers.f.half_carry = (((new_value as u16 >> 11) & 1) & ((self.sp >> 11) & 1)) == 1;
+                        self.registers.f.half_carry = CPU::add_half_carry(self.sp, n as u16, false);
                         self.registers.f.carry = did_overflow;
 
                         self.sp = new_value;
                     }
                     false => {
                         let (new_value, did_overflow) = self.sp.overflowing_sub(n as u16);
+
+                        self.registers.f.half_carry = CPU::sub_half_carry(self.sp, n as u16, false);
+                        self.registers.f.carry = did_overflow;
+
                         self.sp = new_value
                     }
                 }
                 // set flags
+
+                self.registers.f.zero = false;
+                self.registers.f.subtract = false;
 
                 self.pc.wrapping_add(2)
             }

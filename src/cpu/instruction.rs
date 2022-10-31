@@ -540,7 +540,7 @@ impl Instruction {
             0xE5 => todo!(), // TODO: Implement `PUSH HL`
             0xE6 => Some(Instruction::ImmedieteArithmetic(D8Operation::AND)),
             0xE7 => todo!(), // TODO: Implement `RST 20H`
-            0xE8 => todo!(), // TODO: Implement `ADD SP, r8`,
+            0xE8 => Some(Instruction::ADDSP),
             0xE9 => todo!(), // TODO: Implement `JP HL`
             0xEA => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A16,
