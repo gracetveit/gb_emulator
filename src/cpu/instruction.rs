@@ -426,7 +426,10 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::L,
             ))),
-            0x7E => todo!(), // TODO: Implement `LD A, (HL)`
+            0x7E => Some(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::HL,
+            ))),
             0x7F => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::A,
