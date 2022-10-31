@@ -1302,9 +1302,7 @@ impl CPU {
                             self.bus.read_byte(value.wrapping_add(0xFF00))
                         }
                         LoadByteSource::A16 => {
-                            let ls_byte = self.bus.read_byte(self.pc + 1) as u16;
-                            let ms_byte = self.bus.read_byte(self.pc + 2) as u16;
-                            let addr = ms_byte << 8 | ls_byte;
+                            let addr = self.read_next_word();
                             self.bus.read_byte(addr)
                         }
                         LoadByteSource::A8 => {
@@ -1345,9 +1343,7 @@ impl CPU {
                                 .write_byte(c_addr.wrapping_add(0xFF00), source_value);
                         }
                         LoadByteTarget::A16 => {
-                            let ls_byte = self.bus.read_byte(self.pc + 1) as u16;
-                            let ms_byte = self.bus.read_byte(self.pc + 2) as u16;
-                            let addr = ms_byte << 8 | ls_byte;
+                            let addr = self.read_next_word();
                             self.bus.write_byte(addr, source_value);
                         }
                         LoadByteTarget::A8 => {
@@ -1363,6 +1359,28 @@ impl CPU {
                         (LoadByteTarget::A8, _) => self.pc.wrapping_add(2),
                         (_, LoadByteSource::A8) => self.pc.wrapping_add(2),
                         _ => self.pc.wrapping_add(1),
+                    }
+                }
+                LoadType::SixteenBitFromAddress(target) => match target {
+                    SixteenBitArithmeticTarget::BC => {
+                        let value = self.read_next_word();
+                        self.registers.set_bc(value);
+                        self.pc.wrapping_add(3)
+                    }
+                    SixteenBitArithmeticTarget::DE => {
+                        let value = self.read_next_word();
+                        self.registers.set_de(value);
+                        self.pc.wrapping_add(3)
+                    }
+                    SixteenBitArithmeticTarget::HL => {
+                        let value = self.read_next_word();
+                        self.registers.set_hl(value);
+                        self.pc.wrapping_add(3)
+                    }
+                    SixteenBitArithmeticTarget::SP => {
+                        let value = self.read_next_word();
+                        self.sp = value;
+                        self.pc.wrapping_add(3)
                     }
                 }
             },
@@ -1492,9 +1510,10 @@ impl CPU {
         }
     }
 
-    fn read_next_word(&mut self) -> u16 {
-        // TODO: Implement read_next_word
-        todo!()
+    fn read_next_word(&self) -> u16 {
+        let ls_byte = self.bus.read_byte(self.pc.wrapping_add(1)) as u16;
+        let ms_byte = self.bus.read_byte(self.pc.wrapping_add(2)) as u16;
+        (ms_byte << 8) | ls_byte
     }
 
     fn add(&mut self, value: u8) -> u8 {
@@ -1763,9 +1782,7 @@ impl CPU {
 
     fn jump(&self, should_jump: bool) -> u16 {
         if should_jump {
-            let least_significant_byte = self.bus.read_byte(self.pc + 1) as u16;
-            let most_significant_byte = self.bus.read_byte(self.pc + 2) as u16;
-            (most_significant_byte << 8) | least_significant_byte
+            self.read_next_word()
         } else {
             self.pc.wrapping_add(3)
         }

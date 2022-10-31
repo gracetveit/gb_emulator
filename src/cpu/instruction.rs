@@ -40,7 +40,7 @@ pub enum Instruction {
     NOP,
     HALT,
     ImmedieteArithmetic(D8Operation),
-    ADDSP
+    ADDSP,
 }
 
 impl Instruction {
@@ -55,7 +55,9 @@ impl Instruction {
     fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
             0x00 => Some(Instruction::NOP),
-            0x01 => todo!(), // TODO: Implement `LD BC, d16`
+            0x01 => Some(Instruction::LD(LoadType::SixteenBitFromAddress(
+                SixteenBitArithmeticTarget::BC,
+            ))),
             0x02 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::BC,
                 LoadByteSource::A,
@@ -84,7 +86,9 @@ impl Instruction {
             0x0F => Some(Instruction::RRCA),
 
             0x10 => todo!(), // TODO: Implement `STOP d8`
-            0x11 => todo!(), // TODO Implement `LD DE, d16`
+            0x11 => Some(Instruction::LD(LoadType::SixteenBitFromAddress(
+                SixteenBitArithmeticTarget::DE,
+            ))),
             0x12 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::DE,
                 LoadByteSource::A,
@@ -113,7 +117,7 @@ impl Instruction {
             0x1F => Some(Instruction::RRA),
 
             0x20 => todo!(), // TODO: Implement `JR NZ, r8`
-            0x21 => todo!(), // TODO: Implement `LD HL, d16`
+            0x21 => Some(Instruction::LD(LoadType::SixteenBitFromAddress(SixteenBitArithmeticTarget::HL))),
             0x22 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::HLI,
                 LoadByteSource::A,
@@ -142,7 +146,7 @@ impl Instruction {
             0x2F => Some(Instruction::CPL),
 
             0x30 => todo!(), // TODO: Implement `JR NC, r8`
-            0x31 => todo!(), // TODO: Implement `LD SP, d16`
+            0x31 => Some(Instruction::LD(LoadType::SixteenBitFromAddress(SixteenBitArithmeticTarget::SP))),
             0x32 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::HLD,
                 LoadByteSource::A,
@@ -884,12 +888,12 @@ pub enum JumpTest {
 
 pub enum LoadType {
     Byte(LoadByteTarget, LoadByteSource),
-    // TODO: Add remaining types
-    // Word
-    // AFromIndirect
-    // IndirectFromA
-    // AFromByteAddress,
-    // ByteAddressFromA
+    SixteenBitFromAddress(SixteenBitArithmeticTarget), // TODO: Add remaining types
+                                                       // Word
+                                                       // AFromIndirect
+                                                       // IndirectFromA
+                                                       // AFromByteAddress,
+                                                       // ByteAddressFromA
 }
 
 pub enum LoadByteTarget {
