@@ -1,7 +1,7 @@
 use super::{
     instruction::{
         ArithmeticTarget, D8Operation, Instruction, JumpTest, LoadByteSource, LoadByteTarget,
-        LoadType, StackTarget,
+        LoadType, SixteenBitArithmeticTarget, StackTarget,
     },
     memory_bus::MemoryBus,
     registers::{FlagsRegister, Registers},
@@ -93,14 +93,32 @@ impl CPU {
                     self.pc.wrapping_add(1)
                 }
             },
-            // Instruction::ADDHL(target) => match target {
-            //     ArithmeticTarget::A => {
-            //         let value = self.registers.a;
-            //         let new_value = self.addhl(value);
-            //         self.registers.set_hl(new_value);
-            //     }
-            //     _ => { /* TODO: Add more targets */ }
-            // },
+            Instruction::ADD16(target) => match target {
+                SixteenBitArithmeticTarget::BC => {
+                    let value = self.registers.get_bc();
+                    let new_value = self.add_hl(value);
+                    self.registers.set_hl(new_value);
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::DE => {
+                    let value = self.registers.get_de();
+                    let new_value = self.add_hl(value);
+                    self.registers.set_hl(new_value);
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::HL => {
+                    let value = self.registers.get_hl();
+                    let new_value = self.add_hl(value);
+                    self.registers.set_hl(new_value);
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::SP => {
+                    let value = self.sp;
+                    let new_value = self.add_hl(value);
+                    self.registers.set_hl(new_value);
+                    self.pc.wrapping_add(1)
+                }
+            },
             Instruction::ADC(target) => match target {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
@@ -1399,23 +1417,17 @@ impl CPU {
         new_value
     }
 
-    // fn addhl(&mut self, value: u8) -> u16 {
-    //     /*
-    //     TODO
+    fn add_hl(&mut self, value: u16) -> u16 {
+        let target = self.registers.get_hl();
+        let (new_value, did_overflow) = target.overflowing_add(value);
 
-    //     my code says that the half-carry flag is the result of the 8-bit addition
-    //     of H + (whatever high register) + carry from L + (whatever low register)
+        // Does not affect Zero flag
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = (((target >> 11) & 1) & ((value >> 11) & 1)) == 1;
+        self.registers.f.carry = did_overflow;
 
-    //     so basically, do the low addition to get the carry, then treat the high
-    //     addition as a regular ADC
-    //     */
-    //     let (new_value, did_overflow) = self.registers.get_hl().overflowing_add(value as u16);
-    //     self.registers.f.zero = new_value == 0;
-    //     self.registers.f.subtract = false;
-    //     self.registers.f.carry = did_overflow;
-    //     self.registers.f.half_carry = (self.registers.get_hl() & 0xF) + (value as u16 & 0xF) > 0xF;
-    //     new_value
-    // }
+        new_value
+    }
 
     fn adc(&mut self, value: u8) -> u8 {
         let (new_value, did_overflow) = self.registers.a.overflowing_add(value);

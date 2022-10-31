@@ -1,6 +1,7 @@
 pub enum Instruction {
     ADD(ArithmeticTarget),
     // ADDHL
+    ADD16(SixteenBitArithmeticTarget),
     ADC(ArithmeticTarget),
     SUB(ArithmeticTarget),
     SBC(ArithmeticTarget),
@@ -65,7 +66,7 @@ impl Instruction {
             ))),
             0x07 => todo!(), // TODO: Implement `RLCA`
             0x08 => todo!(), // TODO: Implement `LD (a16), SP`
-            0x09 => todo!(), // TODO: Implement `ADD HL, BC`
+            0x09 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::BC)),
             0x0A => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::BC,
@@ -94,7 +95,7 @@ impl Instruction {
             ))),
             0x17 => Some(Instruction::RLA),
             0x18 => todo!(), // TODO Implement `JR r8`
-            0x19 => todo!(), // TODO Implement `ADD HL, DE`
+            0x19 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::DE)),
             0x1A => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::DE,
@@ -123,7 +124,7 @@ impl Instruction {
             ))),
             0x27 => todo!(), // TODO: Implement `DAA`
             0x28 => todo!(), // TODO: Implement `JR Z, r8`
-            0x29 => todo!(), // TODO: Implement `ADD HL, HL`
+            0x29 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::HL)),
             0x2A => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::HLI,
@@ -152,7 +153,7 @@ impl Instruction {
             ))),
             0x37 => Some(Instruction::SCF),
             0x38 => todo!(), // TODO: Implement `JR C, r8`
-            0x39 => todo!(), // TODO: Implement `ADD HL, SP`
+            0x39 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::SP)),
             0x3A => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::HLD,
@@ -861,6 +862,13 @@ pub enum ArithmeticTarget {
     H,
     L,
     HL,
+}
+
+pub enum SixteenBitArithmeticTarget {
+    BC,
+    DE,
+    HL,
+    SP,
 }
 
 pub enum JumpTest {
