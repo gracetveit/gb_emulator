@@ -13,6 +13,7 @@ pub struct CPU {
     sp: u16,
     bus: MemoryBus,
     is_halted: bool,
+    is_stopped: bool,
 }
 
 impl CPU {
@@ -1448,6 +1449,10 @@ impl CPU {
 
                 self.pc.wrapping_add(2)
             }
+            Instruction::STOP => {
+                self.is_stopped = true;
+                self.pc.wrapping_add(2)
+            }
         }
     }
 
@@ -1838,6 +1843,7 @@ fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> CPU {
         sp: 0,
         bus: MemoryBus::new(),
         is_halted: false,
+        is_stopped: false,
     }
 }
 

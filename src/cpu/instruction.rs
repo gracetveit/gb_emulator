@@ -1,4 +1,5 @@
 pub enum Instruction {
+    // TODO: Add functionality for DI/EI/STOP/HALT
     ADD(ArithmeticTarget),
     // ADDHL
     ADD16(SixteenBitArithmeticTarget),
@@ -39,6 +40,7 @@ pub enum Instruction {
     RET(JumpTest),
     NOP,
     HALT,
+    STOP,
     ImmedieteArithmetic(D8Operation),
     ADDSP,
 }
