@@ -1503,7 +1503,7 @@ impl CPU {
     fn inc(&mut self, value: u8) -> u8 {
         // Does not set the carry flag, so overflowing add does not need to
         // record info
-        let (new_value, _) = value.overflowing_add(1);
+        let new_value = value.wrapping_add(1);
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
@@ -1513,7 +1513,7 @@ impl CPU {
     }
 
     fn dec(&mut self, value: u8) -> u8 {
-        let (new_value, _) = value.overflowing_sub(1);
+        let new_value = value.wrapping_sub(1);
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
