@@ -1596,7 +1596,6 @@ impl CPU {
     }
 
     fn sbc(&mut self, value: u8) -> u8 {
-        // TODO: Fix half carry
         let new_value = self.registers.a.wrapping_sub(value);
 
         self.registers.f.zero = new_value == 0;
