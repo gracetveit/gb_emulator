@@ -1,5 +1,5 @@
 pub enum Instruction {
-    // TODO: Add functionality for DI/EI/STOP/HALT
+    // TODO: Add functionality for DI/EI/STOP/HALT/RETI
     ADD(ArithmeticTarget),
     // ADDHL
     ADD16(SixteenBitArithmeticTarget),
@@ -43,6 +43,7 @@ pub enum Instruction {
     STOP,
     ImmedieteArithmetic(D8Operation),
     ADDSP,
+    DAA,
 }
 
 impl Instruction {
@@ -133,7 +134,7 @@ impl Instruction {
                 LoadByteTarget::H,
                 LoadByteSource::D8,
             ))),
-            0x27 => todo!(), // TODO: Implement `DAA`
+            0x27 => Some(Instruction::DAA),
             0x28 => todo!(), // TODO: Implement `JR Z, r8`
             0x29 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::HL)),
             0x2A => Some(Instruction::LD(LoadType::Byte(

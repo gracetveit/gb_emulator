@@ -1453,6 +1453,33 @@ impl CPU {
                 self.is_stopped = true;
                 self.pc.wrapping_add(2)
             }
+            Instruction::DAA => {
+                match self.registers.f.subtract {
+                    false => {
+                        // after an addtion, adjust if half-carry occored or if results is out of bounds
+                        if self.registers.f.carry || (self.registers.a > 0x99) {
+                            self.registers.a += 0x6;
+                            self.registers.f.carry = true;
+                        }
+                        if self.registers.f.half_carry || ((self.registers.a & 0x0F) > 0x09) {
+                            self.registers.a += 0x6;
+                        }
+                    }
+                    true => {
+                        if self.registers.f.carry {
+                            self.registers.a -= 0x60;
+                        }
+                        if self.registers.f.half_carry {
+                            self.registers.a -= 0x6;
+                        }
+                    }
+                }
+
+                self.registers.f.zero = self.registers.a == 0;
+                self.registers.f.half_carry = false;
+
+                self.pc.wrapping_add(1)
+            }
         }
     }
 
