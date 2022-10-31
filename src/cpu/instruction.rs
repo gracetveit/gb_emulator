@@ -19,7 +19,7 @@ pub enum Instruction {
     RRA,
     RLA,
     RRCA,
-    RRLA,
+    RLCA,
     CPL,
     BIT(ArithmeticTarget, u8),
     RES(ArithmeticTarget, u8),
@@ -71,7 +71,7 @@ impl Instruction {
                 LoadByteTarget::B,
                 LoadByteSource::D8,
             ))),
-            0x07 => todo!(), // TODO: Implement `RLCA`
+            0x07 => Some(Instruction::RLCA),
             0x08 => Some(Instruction::LD(LoadType::AddressFromSP)),
             0x09 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::BC)),
             0x0A => Some(Instruction::LD(LoadType::Byte(

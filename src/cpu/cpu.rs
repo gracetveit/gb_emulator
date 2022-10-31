@@ -635,7 +635,7 @@ impl CPU {
                 self.registers.a = new_value;
                 self.pc.wrapping_add(1)
             }
-            Instruction::RRLA => {
+            Instruction::RLCA => {
                 let value = self.registers.a;
                 let new_value = self.rl(value, true, false);
                 self.registers.a = new_value;
@@ -2061,7 +2061,7 @@ fn test_rrca() {
 }
 
 #[test]
-fn test_rrla() {
+fn test_rlca() {
     let mut test_cpu = create_cpu(
         0b000010111,
         0,
@@ -2073,7 +2073,7 @@ fn test_rrla() {
         },
     );
 
-    test_cpu.execute(Instruction::RRLA);
+    test_cpu.execute(Instruction::RLCA);
 
     assert_eq!(test_cpu.registers.a, 0b000101110);
     assert_eq!(test_cpu.registers.f.carry, false)
