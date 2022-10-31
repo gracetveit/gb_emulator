@@ -512,6 +512,27 @@ impl CPU {
                     self.pc.wrapping_add(1)
                 }
             },
+            Instruction::INC16(target) => match target {
+                SixteenBitArithmeticTarget::BC => {
+                    self.registers
+                        .set_bc(self.registers.get_bc().wrapping_add(1));
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::DE => {
+                    self.registers
+                        .set_de(self.registers.get_de().wrapping_add(1));
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::HL => {
+                    self.registers
+                        .set_hl(self.registers.get_hl().wrapping_add(1));
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::SP => {
+                    self.sp = self.sp.wrapping_add(1);
+                    self.pc.wrapping_add(1)
+                }
+            },
             Instruction::DEC(target) => match target {
                 ArithmeticTarget::A => {
                     let value = self.registers.a;
@@ -559,6 +580,27 @@ impl CPU {
                     let value = self.bus.read_byte(self.registers.get_hl());
                     let new_value = self.dec(value);
                     self.bus.write_byte(self.registers.get_hl(), new_value);
+                    self.pc.wrapping_add(1)
+                }
+            },
+            Instruction::DEC16(target) => match target {
+                SixteenBitArithmeticTarget::BC => {
+                    self.registers
+                        .set_bc(self.registers.get_bc().wrapping_sub(1));
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::DE => {
+                    self.registers
+                        .set_de(self.registers.get_de().wrapping_sub(1));
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::HL => {
+                    self.registers
+                        .set_hl(self.registers.get_hl().wrapping_sub(1));
+                    self.pc.wrapping_add(1)
+                }
+                SixteenBitArithmeticTarget::SP => {
+                    self.sp = self.sp.wrapping_sub(1);
                     self.pc.wrapping_add(1)
                 }
             },

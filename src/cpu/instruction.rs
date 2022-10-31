@@ -10,7 +10,9 @@ pub enum Instruction {
     XOR(ArithmeticTarget),
     CP(ArithmeticTarget),
     INC(ArithmeticTarget),
+    INC16(SixteenBitArithmeticTarget),
     DEC(ArithmeticTarget),
+    DEC16(SixteenBitArithmeticTarget),
     CCF,
     SCF,
     RRA,
@@ -57,7 +59,7 @@ impl Instruction {
                 LoadByteTarget::BC,
                 LoadByteSource::A,
             ))),
-            0x03 => todo!(), // TODO: Implement `INC BC`
+            0x03 => Some(Instruction::INC16(SixteenBitArithmeticTarget::BC)),
             0x04 => Some(Instruction::INC(ArithmeticTarget::B)),
             0x05 => Some(Instruction::DEC(ArithmeticTarget::B)),
             0x06 => Some(Instruction::LD(LoadType::Byte(
@@ -71,7 +73,7 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::BC,
             ))),
-            0x0B => todo!(), // TODO: Implement `DEC BC`
+            0x0B => Some(Instruction::DEC16(SixteenBitArithmeticTarget::BC)),
             0x0C => Some(Instruction::INC(ArithmeticTarget::C)),
             0x0D => Some(Instruction::DEC(ArithmeticTarget::C)),
             0x0E => Some(Instruction::LD(LoadType::Byte(
@@ -86,7 +88,7 @@ impl Instruction {
                 LoadByteTarget::DE,
                 LoadByteSource::A,
             ))),
-            0x13 => todo!(), // TODO Implement `INC DE`
+            0x13 => Some(Instruction::INC16(SixteenBitArithmeticTarget::DE)),
             0x14 => Some(Instruction::INC(ArithmeticTarget::D)),
             0x15 => Some(Instruction::DEC(ArithmeticTarget::D)),
             0x16 => Some(Instruction::LD(LoadType::Byte(
@@ -100,7 +102,7 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::DE,
             ))),
-            0x1B => todo!(), // TODO: Implement `DEC DE`
+            0x1B => Some(Instruction::DEC16(SixteenBitArithmeticTarget::DE)),
             0x1C => Some(Instruction::INC(ArithmeticTarget::E)),
             0x1D => Some(Instruction::DEC(ArithmeticTarget::E)),
             0x1E => Some(Instruction::LD(LoadType::Byte(
@@ -115,7 +117,7 @@ impl Instruction {
                 LoadByteTarget::HLI,
                 LoadByteSource::A,
             ))),
-            0x23 => todo!(), // TODO: Implement `INC HL`
+            0x23 => Some(Instruction::INC16(SixteenBitArithmeticTarget::HL)),
             0x24 => Some(Instruction::INC(ArithmeticTarget::H)),
             0x25 => Some(Instruction::DEC(ArithmeticTarget::H)),
             0x26 => Some(Instruction::LD(LoadType::Byte(
@@ -129,7 +131,7 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::HLI,
             ))),
-            0x2B => todo!(), // TODO: Implement `DEC HL`
+            0x2B => Some(Instruction::DEC16(SixteenBitArithmeticTarget::HL)),
             0x2C => Some(Instruction::INC(ArithmeticTarget::L)),
             0x2D => Some(Instruction::DEC(ArithmeticTarget::L)),
             0x2E => Some(Instruction::LD(LoadType::Byte(
@@ -144,7 +146,7 @@ impl Instruction {
                 LoadByteTarget::HLD,
                 LoadByteSource::A,
             ))),
-            0x33 => todo!(), // TODO: Implement `INC SP`
+            0x33 => Some(Instruction::INC16(SixteenBitArithmeticTarget::SP)),
             0x34 => Some(Instruction::INC(ArithmeticTarget::HL)),
             0x35 => Some(Instruction::DEC(ArithmeticTarget::HL)),
             0x36 => Some(Instruction::LD(LoadType::Byte(
@@ -158,7 +160,7 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::HLD,
             ))),
-            0x3B => todo!(), // TODO: Implement `DEC SP`
+            0x3B => Some(Instruction::DEC16(SixteenBitArithmeticTarget::SP)),
             0x3C => Some(Instruction::INC(ArithmeticTarget::A)),
             0x3D => Some(Instruction::DEC(ArithmeticTarget::A)),
             0x3E => Some(Instruction::LD(LoadType::Byte(
