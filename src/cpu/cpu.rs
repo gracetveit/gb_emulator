@@ -1403,7 +1403,50 @@ impl CPU {
                 self.is_halted = true;
                 self.pc.wrapping_add(1)
             }
+            Instruction::ADDSP => {
+                // Identify if n is negative or positive
+                let (n, is_positive) = CPU::sign(self.bus.read_byte(self.pc.wrapping_add(1)));
+                // grab the unsigned value from the 'signed' n
+                // depending on the operation, add or subtract n from sp
+                match is_positive {
+                    true => {
+                        let (new_value, did_overflow) = self.sp.overflowing_add(n as u16);
+
+                        self.registers.f.half_carry = (((new_value as u16 >> 11) & 1) & ((self.sp >> 11) & 1)) == 1;
+                        self.registers.f.carry = did_overflow;
+
+                        self.sp = new_value;
+                    }
+                    false => {
+                        let (new_value, did_overflow) = self.sp.overflowing_sub(n as u16);
+                        self.sp = new_value
+                    }
+                }
+                // set flags
+
+                self.pc.wrapping_add(2)
+            }
         }
+    }
+
+    fn add_half_carry (x: u16, y:u16, is_eight: bool) -> bool {
+        match is_eight {
+            true => (x & 0xF) + (y & 0xF) >= 0xF,
+            false => ((x >> 8) & 0xF) + ((y >> 8) & 0xF) >= 0xF
+        }
+    }
+
+    fn sub_half_carry (x: u16, y: u16, is_eight: bool) -> bool {
+        match is_eight {
+            true => ((x >> 4) + 0x10) - (y >> 4) > 0x10,
+            false => ((x >> 12) + 0x10) - (y >> 12) > 0x10
+        }
+    }
+
+    fn sign(value: u8) -> (u8, bool) {
+        let is_positive = (value >> 7) & 1 == 0;
+        let new_value = value & 0x7F;
+        (new_value, is_positive)
     }
 
     fn push(&mut self, value: u16) {
@@ -1454,7 +1497,7 @@ impl CPU {
         // Half Cary is set if adding the lower nibbles of the value and register A
         // together result in a value bigger than 0xF (16). If the result is larger than 0xF
         // then the addition caused a carry from the lower nibble to the upper nibble
-        self.registers.f.half_carry = (self.registers.a & 0xF) + (value & 0xF) > 0xF;
+        self.registers.f.half_carry = CPU::add_half_carry(value as u16, self.registers.a as u16, true);
         self.registers.f.carry = did_overflow;
         new_value
     }
@@ -1465,7 +1508,7 @@ impl CPU {
 
         // Does not affect Zero flag
         self.registers.f.subtract = false;
-        self.registers.f.half_carry = (((target >> 11) & 1) & ((value >> 11) & 1)) == 1;
+        self.registers.f.half_carry = CPU::add_half_carry(target, value, false);
         self.registers.f.carry = did_overflow;
 
         new_value
@@ -1475,7 +1518,7 @@ impl CPU {
         let (new_value, did_overflow) = self.registers.a.overflowing_add(value);
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
-        self.registers.f.half_carry = (self.registers.a & 0xF) + (value & 0xF) > 0xF;
+        self.registers.f.half_carry = CPU::add_half_carry(self.registers.a as u16, value as u16, true);
         self.registers.f.carry = did_overflow;
         match self.registers.f.carry {
             true => new_value + 1,
@@ -1488,7 +1531,7 @@ impl CPU {
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
-        self.registers.f.half_carry = ((self.registers.a & 0xF) - (value & 0xF)) & 0x10 == 0x10;
+        self.registers.f.half_carry = CPU::sub_half_carry(self.registers.a as u16, value as u16, true);
         self.registers.f.carry = did_overflow;
 
         new_value
@@ -1500,7 +1543,7 @@ impl CPU {
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
-        self.registers.f.half_carry = ((self.registers.a & 0xF) - (value & 0xF)) & 0x10 == 0x10;
+        self.registers.f.half_carry = CPU::sub_half_carry(self.registers.a as u16, value as u16, true);
         self.registers.f.carry = did_overflow;
 
         match self.registers.f.carry {
@@ -1549,7 +1592,7 @@ impl CPU {
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
-        self.registers.f.half_carry = (self.registers.a & 0xF) + (value & 0xF) > 0xF;
+        self.registers.f.half_carry = CPU::add_half_carry(value as u16, 1, true);
 
         new_value
     }
@@ -1559,7 +1602,7 @@ impl CPU {
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = true;
-        self.registers.f.half_carry = ((self.registers.a & 0xF) - (value & 0xF)) & 0x10 == 0x10;
+        self.registers.f.half_carry = CPU::sub_half_carry(value as u16, 1, true);
 
         new_value
     }
@@ -2188,4 +2231,24 @@ fn test_swap() {
         0,
         "Zero flag is set if zero, all other flags reset"
     )
+}
+
+#[test]
+fn test_sign() {
+    let test_value = 0b11110000;
+    assert_eq!(CPU::sign(test_value), (0b01110000, false))
+}
+
+#[test]
+fn half_carry_add_test() {
+    let x = 0b00001000;
+    let y = 0b00001000;
+    assert_eq!(CPU::add_half_carry(x as u16, y as u16, true), true)
+}
+
+#[test]
+fn half_carry_sub_test() {
+    let x = 0b10000000;
+    let y = 0b00010000;
+    assert_eq!(CPU::sub_half_carry(x as u16, y as u16, true), true)
 }

@@ -40,6 +40,7 @@ pub enum Instruction {
     NOP,
     HALT,
     ImmedieteArithmetic(D8Operation),
+    ADDSP
 }
 
 impl Instruction {
