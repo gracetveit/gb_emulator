@@ -1,11 +1,26 @@
 pub struct MemoryBus {
+    in_bios: bool,
     memory: [u8; 0xFFFF],
+    bios: [u8; 0xFF + 1],
+    rom: [u8; 0x7FFF + 1],
+    // Temp v_ram setup
+    v_ram: [u8; 0x2000],
+    e_ram: [u8; 0x2000],
+    w_ram: [u8; 0x5E00],
+    z_ram: [u8; 0x80],
 }
 
 impl MemoryBus {
     pub fn new() -> MemoryBus {
         MemoryBus {
-            memory: [0;0xFFFF]
+            in_bios: true,
+            memory: [0;0xFFFF],
+            bios: [0;0xFF + 1],
+            rom: [0;0x7FFF + 1],
+            v_ram: [0; 0x2000],
+            e_ram: [0; 0x2000],
+            w_ram: [0; 0x5E00],
+            z_ram: [0; 0x80],
         }
     }
 
@@ -29,4 +44,13 @@ impl MemoryBus {
         self.write_byte(initial_addr, ls_byte);
         self.write_byte(initial_addr.wrapping_add(1), ms_byte);
     }
+}
+
+#[cfg(test)]
+
+#[test]
+fn test_read_bios() {
+    let test_bus = MemoryBus::new();
+
+    let _ = test_bus.bios[0xFF];
 }
