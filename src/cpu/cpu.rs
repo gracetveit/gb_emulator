@@ -464,7 +464,7 @@ impl CPU {
                 }
                 ArithmeticTarget::HL => {
                     let value = self.bus.read_byte(self.registers.get_hl());
-                    let new_value = self.sub(value);
+                    self.sub(value);
                     (self.pc.wrapping_add(1), 8)
                 }
             },
