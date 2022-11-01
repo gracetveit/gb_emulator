@@ -44,6 +44,7 @@ pub enum Instruction {
     ImmedieteArithmetic(D8Operation),
     ADDSP,
     DAA,
+    JR(JumpTest),
 }
 
 impl Instruction {
@@ -104,7 +105,7 @@ impl Instruction {
                 LoadByteSource::D8,
             ))),
             0x17 => Some(Instruction::RLA),
-            0x18 => todo!(), // TODO Implement `JR r8`
+            0x18 => Some(Instruction::JR(JumpTest::Always)),
             0x19 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::DE)),
             0x1A => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
@@ -119,7 +120,7 @@ impl Instruction {
             ))),
             0x1F => Some(Instruction::RRA),
 
-            0x20 => todo!(), // TODO: Implement `JR NZ, r8`
+            0x20 => Some(Instruction::JR(JumpTest::NotZero)),
             0x21 => Some(Instruction::LD(LoadType::SixteenBitFromAddress(
                 SixteenBitArithmeticTarget::HL,
             ))),
@@ -135,7 +136,7 @@ impl Instruction {
                 LoadByteSource::D8,
             ))),
             0x27 => Some(Instruction::DAA),
-            0x28 => todo!(), // TODO: Implement `JR Z, r8`
+            0x28 => Some(Instruction::JR(JumpTest::Zero)),
             0x29 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::HL)),
             0x2A => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
@@ -150,7 +151,7 @@ impl Instruction {
             ))),
             0x2F => Some(Instruction::CPL),
 
-            0x30 => todo!(), // TODO: Implement `JR NC, r8`
+            0x30 => Some(Instruction::JR(JumpTest::NotCarry)),
             0x31 => Some(Instruction::LD(LoadType::SixteenBitFromAddress(
                 SixteenBitArithmeticTarget::SP,
             ))),
@@ -166,7 +167,7 @@ impl Instruction {
                 LoadByteSource::D8,
             ))),
             0x37 => Some(Instruction::SCF),
-            0x38 => todo!(), // TODO: Implement `JR C, r8`
+            0x38 => Some(Instruction::JR(JumpTest::Carry)),
             0x39 => Some(Instruction::ADD16(SixteenBitArithmeticTarget::SP)),
             0x3A => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,

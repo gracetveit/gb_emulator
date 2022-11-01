@@ -4,7 +4,7 @@ use super::{
         LoadType, SixteenBitArithmeticTarget, StackTarget,
     },
     memory_bus::MemoryBus,
-    registers::{Registers},
+    registers::Registers,
 };
 
 pub struct CPU {
@@ -1268,6 +1268,23 @@ impl CPU {
                 };
                 self.jump(jump_condition)
             }
+            Instruction::JR(test) => {
+                let jump_condition = match test {
+                    JumpTest::NotZero => !self.registers.f.zero,
+                    JumpTest::NotCarry => !self.registers.f.carry,
+                    JumpTest::Zero => self.registers.f.zero,
+                    JumpTest::Carry => self.registers.f.carry,
+                    JumpTest::Always => true,
+                };
+
+                match jump_condition {
+                    true => {
+                        let addr = self.pc;
+                        self.addr8(addr, false)
+                    }
+                    false => self.pc.wrapping_add(2),
+                }
+            }
             Instruction::LD(load_type) => match load_type {
                 LoadType::Byte(target, source) => {
                     let source_value = match source {
@@ -1395,7 +1412,7 @@ impl CPU {
                     self.pc.wrapping_add(3)
                 }
                 LoadType::HLFromSPN => {
-                    let value = self.addr8(self.sp);
+                    let value = self.addr8(self.sp, true);
 
                     self.registers.set_hl(value);
 
@@ -1427,7 +1444,7 @@ impl CPU {
                     JumpTest::Carry => self.registers.f.carry,
                     JumpTest::NotCarry => !self.registers.f.carry,
                     JumpTest::NotZero => !self.registers.f.zero,
-                    JumpTest::Zero => self.registers.f.zero
+                    JumpTest::Zero => self.registers.f.zero,
                 };
                 self.call(jump_condition)
             }
@@ -1437,7 +1454,7 @@ impl CPU {
                     JumpTest::Carry => self.registers.f.carry,
                     JumpTest::NotCarry => !self.registers.f.carry,
                     JumpTest::NotZero => !self.registers.f.zero,
-                    JumpTest::Zero => self.registers.f.zero
+                    JumpTest::Zero => self.registers.f.zero,
                 };
                 self.return_(jump_condition)
             }
@@ -1447,7 +1464,7 @@ impl CPU {
                 self.pc.wrapping_add(1)
             }
             Instruction::ADDSP => {
-                self.sp = self.addr8(self.sp);
+                self.sp = self.addr8(self.sp, true);
 
                 self.pc.wrapping_add(2)
             }
@@ -1822,7 +1839,7 @@ impl CPU {
         }
     }
 
-    fn addr8(&mut self, target: u16) -> u16 {
+    fn addr8(&mut self, target: u16, set_flags: bool) -> u16 {
         // Identify if n is negative or positive
         let (n, is_positive) = CPU::sign(self.bus.read_byte(self.pc.wrapping_add(1)));
         // grab the unsigned value from the 'signed' n
@@ -1831,20 +1848,24 @@ impl CPU {
             true => {
                 let (new_value, did_overflow) = target.overflowing_add(n as u16);
 
-                self.registers.f.zero = false;
-                self.registers.f.subtract = false;
-                self.registers.f.half_carry = CPU::add_half_carry(target, n as u16, false);
-                self.registers.f.carry = did_overflow;
+                if set_flags {
+                    self.registers.f.zero = false;
+                    self.registers.f.subtract = false;
+                    self.registers.f.half_carry = CPU::add_half_carry(target, n as u16, false);
+                    self.registers.f.carry = did_overflow;
+                }
 
                 new_value
             }
             false => {
                 let (new_value, did_overflow) = target.overflowing_sub(n as u16);
 
-                self.registers.f.zero = false;
-                self.registers.f.subtract = false;
-                self.registers.f.half_carry = CPU::sub_half_carry(target, n as u16, false);
-                self.registers.f.carry = did_overflow;
+                if set_flags {
+                    self.registers.f.zero = false;
+                    self.registers.f.subtract = false;
+                    self.registers.f.half_carry = CPU::sub_half_carry(target, n as u16, false);
+                    self.registers.f.carry = did_overflow;
+                }
 
                 new_value
             }
@@ -1852,7 +1873,6 @@ impl CPU {
         // set flags
     }
 }
-
 
 #[cfg(test)]
 use crate::cpu::registers::FlagsRegister;
