@@ -21,6 +21,10 @@ pub struct CPU {
 
 impl CPU {
     pub fn step(&mut self) {
+        if self.pc == 0x0100 {
+            self.bus.in_bios = false
+        }
+
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;
         let (mut toggle_interrupt, interrupt_state) = match self.interrupt {
