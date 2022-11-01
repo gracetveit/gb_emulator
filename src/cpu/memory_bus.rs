@@ -38,7 +38,10 @@ impl MemoryBus {
                 }
             }
             Err(e) => {
-                println!("Error: {e:?}")
+                println!("WARNING, no bios loaded {e:}");
+                bios[0] = 0x31;
+                bios[1] = 0xFE;
+                bios[2] = 0xFF;
             }
         }
         bios
