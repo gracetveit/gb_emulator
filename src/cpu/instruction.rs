@@ -33,6 +33,7 @@ pub enum Instruction {
     SLA(ArithmeticTarget),
     SWAP(ArithmeticTarget),
     JP(JumpTest),
+    JPHL,
     LD(LoadType),
     PUSH(StackTarget),
     POP(StackTarget),
@@ -557,7 +558,7 @@ impl Instruction {
             0xE6 => Some(Instruction::ImmedieteArithmetic(D8Operation::AND)),
             0xE7 => Some(Instruction::RST(0x20)),
             0xE8 => Some(Instruction::ADDSP),
-            0xE9 => todo!(), // TODO: Implement `JP HL`
+            0xE9 => Some(Instruction::JPHL),
             0xEA => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A16,
                 LoadByteSource::A,
