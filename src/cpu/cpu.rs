@@ -15,33 +15,55 @@ pub struct CPU {
     is_halted: bool,
     is_stopped: bool,
     m: u8,
-    t: u8
+    t: u8,
+    interrupt: Interrupt,
 }
 
 impl CPU {
     pub fn step(&mut self) {
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;
+        let (mut toggle_interrupt, interrupt_state) = match self.interrupt {
+            Interrupt::Transition(state) => (true, state),
+            _ => (false, false),
+        };
         if prefixed {
             self.t += 4;
             self.m += 1;
             instruction_byte = self.bus.read_byte(self.pc + 1);
         }
 
-        let (next_pc, t) = if let Some(instruction) = Instruction::from_byte(instruction_byte, prefixed)
-        {
-            self.execute(instruction)
-        } else {
-            let description = format!(
-                "0x{}{:x}",
-                if prefixed { "cb" } else { "" },
-                instruction_byte
-            );
-            panic!("Unkown instruction found for: 0x{}", description);
-        };
+        let (next_pc, t) =
+            if let Some(instruction) = Instruction::from_byte(instruction_byte, prefixed) {
+                self.execute(instruction)
+            } else {
+                let description = format!(
+                    "0x{}{:x}",
+                    if prefixed { "cb" } else { "" },
+                    instruction_byte
+                );
+                panic!("Unkown instruction found for: 0x{}", description);
+            };
+
+        if toggle_interrupt {
+            toggle_interrupt = match self.interrupt {
+                Interrupt::Transition(state) => state == interrupt_state,
+                _ => false,
+            };
+        }
+
+        if toggle_interrupt {
+            match self.interrupt {
+                Interrupt::Transition(new_state) => match new_state {
+                    true => self.interrupt = Interrupt::Enabled,
+                    false => self.interrupt = Interrupt::Disabled,
+                },
+                _ => {}
+            }
+        }
 
         self.t += t;
-        self.m += t/4;
+        self.m += t / 4;
         self.pc = next_pc;
     }
 
@@ -614,37 +636,37 @@ impl CPU {
                 self.registers.f.subtract = false;
                 self.registers.f.half_carry = false;
                 self.registers.f.carry = !self.registers.f.carry;
-                    (self.pc.wrapping_add(1), 4)
+                (self.pc.wrapping_add(1), 4)
             }
             Instruction::SCF => {
                 self.registers.f.subtract = false;
                 self.registers.f.half_carry = false;
                 self.registers.f.carry = true;
-                    (self.pc.wrapping_add(1), 4)
+                (self.pc.wrapping_add(1), 4)
             }
             Instruction::RRA => {
                 let value = self.registers.a;
                 let new_value = self.rr(value, true, true);
                 self.registers.a = new_value;
-                    (self.pc.wrapping_add(1), 4)
+                (self.pc.wrapping_add(1), 4)
             }
             Instruction::RLA => {
                 let value = self.registers.a;
                 let new_value = self.rl(value, true, true);
                 self.registers.a = new_value;
-                    (self.pc.wrapping_add(1), 4)
+                (self.pc.wrapping_add(1), 4)
             }
             Instruction::RRCA => {
                 let value = self.registers.a;
                 let new_value = self.rrca(value);
                 self.registers.a = new_value;
-                    (self.pc.wrapping_add(1), 4)
+                (self.pc.wrapping_add(1), 4)
             }
             Instruction::RLCA => {
                 let value = self.registers.a;
                 let new_value = self.rl(value, true, false);
                 self.registers.a = new_value;
-                    (self.pc.wrapping_add(1), 4)
+                (self.pc.wrapping_add(1), 4)
             }
             Instruction::CPL => {
                 let value = self.registers.a;
@@ -662,7 +684,7 @@ impl CPU {
                 self.registers.f.half_carry = true;
 
                 self.registers.a = new_value;
-                    (self.pc.wrapping_add(1), 4)
+                (self.pc.wrapping_add(1), 4)
             }
             Instruction::BIT(target, n) => match target {
                 ArithmeticTarget::A => {
@@ -1290,9 +1312,7 @@ impl CPU {
                     false => (self.pc.wrapping_add(2), 8),
                 }
             }
-            Instruction::JPHL => {
-                (self.registers.get_hl(), 4)
-            }
+            Instruction::JPHL => (self.registers.get_hl(), 4),
             Instruction::LD(load_type) => match load_type {
                 LoadType::Byte(target, source) => {
                     let mut t = 4;
@@ -1304,8 +1324,14 @@ impl CPU {
                         LoadByteSource::E => self.registers.e,
                         LoadByteSource::H => self.registers.h,
                         LoadByteSource::L => self.registers.l,
-                        LoadByteSource::HL => {t = 8;self.bus.read_byte(self.registers.get_hl())},
-                        LoadByteSource::D8 => {t = 8;self.bus.read_byte(self.pc.wrapping_add(1))},
+                        LoadByteSource::HL => {
+                            t = 8;
+                            self.bus.read_byte(self.registers.get_hl())
+                        }
+                        LoadByteSource::D8 => {
+                            t = 8;
+                            self.bus.read_byte(self.pc.wrapping_add(1))
+                        }
                         LoadByteSource::HLI => {
                             t = 8;
                             let value = self.bus.read_byte(self.registers.get_hl());
@@ -1324,8 +1350,14 @@ impl CPU {
 
                             value
                         }
-                        LoadByteSource::BC => {t = 8;self.bus.read_byte(self.registers.get_bc())},
-                        LoadByteSource::DE => {t = 8;self.bus.read_byte(self.registers.get_de())},
+                        LoadByteSource::BC => {
+                            t = 8;
+                            self.bus.read_byte(self.registers.get_bc())
+                        }
+                        LoadByteSource::DE => {
+                            t = 8;
+                            self.bus.read_byte(self.registers.get_de())
+                        }
                         LoadByteSource::RefC => {
                             t = 8;
                             let value = self.registers.c as u16;
@@ -1480,18 +1512,10 @@ impl CPU {
                         let (addr, _) = self.return_(true);
                         (addr, 16)
                     }
-                    JumpTest::Carry => {
-                        self.return_(self.registers.f.carry)
-                    }
-                    JumpTest::NotCarry => {
-                        self.return_(!self.registers.f.carry)
-                    }
-                    JumpTest::NotZero => {
-                        self.return_(!self.registers.f.zero)
-                    }
-                    JumpTest::Zero => {
-                        self.return_(self.registers.f.zero)
-                    }
+                    JumpTest::Carry => self.return_(self.registers.f.carry),
+                    JumpTest::NotCarry => self.return_(!self.registers.f.carry),
+                    JumpTest::NotZero => self.return_(!self.registers.f.zero),
+                    JumpTest::Zero => self.return_(self.registers.f.zero),
                 }
             }
             Instruction::RST(n) => {
@@ -1539,6 +1563,18 @@ impl CPU {
                 self.registers.f.half_carry = false;
 
                 (self.pc.wrapping_add(1), 4)
+            }
+            Instruction::EI => {
+                self.interrupt = Interrupt::Transition(true);
+                (self.pc.wrapping_add(1), 4)
+            }
+            Instruction::DI => {
+                self.interrupt = Interrupt::Transition(false);
+                (self.pc.wrapping_add(1), 4)
+            }
+            Instruction::RETI => {
+                self.interrupt = Interrupt::Enabled;
+                (self.pop(), 16)
             }
         }
     }
@@ -1913,6 +1949,14 @@ impl CPU {
     }
 }
 
+enum Interrupt {
+    Enabled,
+    Disabled,
+    // If True, toggle to Enabled
+    // If False, toggle to Disabled
+    Transition(bool),
+}
+
 #[cfg(test)]
 use crate::cpu::registers::FlagsRegister;
 
@@ -1936,7 +1980,8 @@ fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> CPU {
         is_halted: false,
         is_stopped: false,
         m: 0,
-        t: 0
+        t: 0,
+        interrupt: Interrupt::Enabled,
     }
 }
 

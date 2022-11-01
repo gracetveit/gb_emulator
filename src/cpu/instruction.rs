@@ -1,7 +1,5 @@
 pub enum Instruction {
-    // TODO: Add functionality for DI/EI/STOP/HALT/RETI
     ADD(ArithmeticTarget),
-    // ADDHL
     ADD16(SixteenBitArithmeticTarget),
     ADC(ArithmeticTarget),
     SUB(ArithmeticTarget),
@@ -47,6 +45,9 @@ pub enum Instruction {
     DAA,
     JR(JumpTest),
     RST(u16),
+    DI,
+    EI,
+    RETI,
 }
 
 impl Instruction {
@@ -91,7 +92,7 @@ impl Instruction {
             ))),
             0x0F => Some(Instruction::RRCA),
 
-            0x10 => todo!(), // TODO: Implement `STOP d8`
+            0x10 => Some(Instruction::STOP),
             0x11 => Some(Instruction::LD(LoadType::SixteenBitFromAddress(
                 SixteenBitArithmeticTarget::DE,
             ))),
@@ -578,8 +579,8 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::RefC,
             ))),
-            0xF3 => todo!(), // TODO: Implement `DI`
-            0xF4 => None,    // Empty Byte
+            0xF3 => Some(Instruction::DI),
+            0xF4 => None, // Empty Byte
             0xF5 => Some(Instruction::PUSH(StackTarget::AF)),
             0xF6 => Some(Instruction::ImmedieteArithmetic(D8Operation::OR)),
             0xF7 => Some(Instruction::RST(0x30)),
@@ -589,9 +590,9 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::A16,
             ))),
-            0xFB => todo!(), // TODO: Implement `EI`
-            0xFC => None,    // Empty Byte
-            0xFD => None,    // Empty Byte
+            0xFB => Some(Instruction::EI),
+            0xFC => None, // Empty Byte
+            0xFD => None, // Empty Byte
             0xFE => Some(Instruction::ImmedieteArithmetic(D8Operation::CP)),
             0xFF => Some(Instruction::RST(0x38)),
         }
