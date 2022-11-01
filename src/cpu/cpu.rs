@@ -1427,6 +1427,9 @@ impl CPU {
             Instruction::PUSH(target) => {
                 let value = match target {
                     StackTarget::BC => self.registers.get_bc(),
+                    StackTarget::AF => self.registers.get_af(),
+                    StackTarget::DE => self.registers.get_de(),
+                    StackTarget::HL => self.registers.get_hl(),
                 };
                 self.push(value);
                 self.pc.wrapping_add(1)
@@ -1435,6 +1438,9 @@ impl CPU {
                 let result = self.pop();
                 match target {
                     StackTarget::BC => self.registers.set_bc(result),
+                    StackTarget::AF => self.registers.set_af(result),
+                    StackTarget::DE => self.registers.set_de(result),
+                    StackTarget::HL => self.registers.set_hl(result),
                 };
                 self.pc.wrapping_add(1)
             }

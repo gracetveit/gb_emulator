@@ -526,11 +526,11 @@ impl Instruction {
             0xCF => Some(Instruction::RST(0x08)),
 
             0xD0 => Some(Instruction::RET(JumpTest::NotCarry)),
-            0xD1 => todo!(), // TODO: Implement `POP DE`
+            0xD1 => Some(Instruction::POP(StackTarget::DE)),
             0xD2 => Some(Instruction::JP(JumpTest::NotCarry)),
             0xD3 => None, // Empty Byte
             0xD4 => Some(Instruction::CALL(JumpTest::NotCarry)),
-            0xD5 => todo!(), // TODO: Implement `PUSH DE`
+            0xD5 => Some(Instruction::PUSH(StackTarget::DE)),
             0xD6 => Some(Instruction::ImmedieteArithmetic(D8Operation::SUB)),
             0xD7 => Some(Instruction::RST(0x10)),
             0xD8 => Some(Instruction::RET(JumpTest::Carry)),
@@ -546,14 +546,14 @@ impl Instruction {
                 LoadByteTarget::A8,
                 LoadByteSource::A,
             ))),
-            0xE1 => todo!(), // TODO: Implement `POP HL`
+            0xE1 => Some(Instruction::POP(StackTarget::HL)),
             0xE2 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::RefC,
                 LoadByteSource::A,
             ))),
-            0xE3 => None,    // Empty Byte
-            0xE4 => None,    // Empty Byte
-            0xE5 => todo!(), // TODO: Implement `PUSH HL`
+            0xE3 => None, // Empty Byte
+            0xE4 => None, // Empty Byte
+            0xE5 => Some(Instruction::PUSH(StackTarget::HL)),
             0xE6 => Some(Instruction::ImmedieteArithmetic(D8Operation::AND)),
             0xE7 => Some(Instruction::RST(0x20)),
             0xE8 => Some(Instruction::ADDSP),
@@ -572,14 +572,14 @@ impl Instruction {
                 LoadByteTarget::A,
                 LoadByteSource::A8,
             ))),
-            0xF1 => todo!(), // TODO: Implement `POP AF`
+            0xF1 => Some(Instruction::POP(StackTarget::AF)),
             0xF2 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
                 LoadByteSource::RefC,
             ))),
             0xF3 => todo!(), // TODO: Implement `DI`
             0xF4 => None,    // Empty Byte
-            0xF5 => todo!(), // TODO: Implement `PUSH AF`
+            0xF5 => Some(Instruction::PUSH(StackTarget::AF)),
             0xF6 => Some(Instruction::ImmedieteArithmetic(D8Operation::OR)),
             0xF7 => Some(Instruction::RST(0x30)),
             0xF8 => Some(Instruction::LD(LoadType::HLFromSPN)),
@@ -951,7 +951,9 @@ pub enum LoadByteSource {
 
 pub enum StackTarget {
     BC,
-    // TODO: Add more targets
+    DE,
+    HL,
+    AF, // TODO: Add more targets
 }
 
 pub enum D8Operation {
