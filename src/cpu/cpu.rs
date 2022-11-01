@@ -1600,9 +1600,7 @@ impl CPU {
     }
 
     fn read_next_word(&self) -> u16 {
-        let ls_byte = self.bus.read_byte(self.pc.wrapping_add(1)) as u16;
-        let ms_byte = self.bus.read_byte(self.pc.wrapping_add(2)) as u16;
-        (ms_byte << 8) | ls_byte
+        self.bus.read_word(self.pc)
     }
 
     fn add(&mut self, value: u8) -> u8 {
