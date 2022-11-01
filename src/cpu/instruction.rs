@@ -45,6 +45,7 @@ pub enum Instruction {
     ADDSP,
     DAA,
     JR(JumpTest),
+    RST(u16),
 }
 
 impl Instruction {
@@ -514,7 +515,7 @@ impl Instruction {
             0xC4 => Some(Instruction::CALL(JumpTest::NotZero)),
             0xC5 => Some(Instruction::PUSH(StackTarget::BC)),
             0xC6 => Some(Instruction::ImmedieteArithmetic(D8Operation::ADD)),
-            0xC7 => todo!(), // TODO: Implement `RST 00H`
+            0xC7 => Some(Instruction::RST(0x00)),
             0xC8 => Some(Instruction::RET(JumpTest::Zero)),
             0xC9 => Some(Instruction::RET(JumpTest::Always)),
             0xCA => Some(Instruction::JP(JumpTest::Zero)),
@@ -522,7 +523,7 @@ impl Instruction {
             0xCC => Some(Instruction::CALL(JumpTest::Zero)),
             0xCD => Some(Instruction::CALL(JumpTest::Always)),
             0xCE => Some(Instruction::ImmedieteArithmetic(D8Operation::ADC)),
-            0xCF => todo!(), // TODO: Implement `RST 08H`
+            0xCF => Some(Instruction::RST(0x08)),
 
             0xD0 => Some(Instruction::RET(JumpTest::NotCarry)),
             0xD1 => todo!(), // TODO: Implement `POP DE`
@@ -531,7 +532,7 @@ impl Instruction {
             0xD4 => Some(Instruction::CALL(JumpTest::NotCarry)),
             0xD5 => todo!(), // TODO: Implement `PUSH DE`
             0xD6 => Some(Instruction::ImmedieteArithmetic(D8Operation::SUB)),
-            0xD7 => todo!(), // TODO: Implement `RST 10H`
+            0xD7 => Some(Instruction::RST(0x10)),
             0xD8 => Some(Instruction::RET(JumpTest::Carry)),
             0xD9 => todo!(), // TODO: Implement `RETI`
             0xDA => Some(Instruction::JP(JumpTest::Carry)),
@@ -539,7 +540,7 @@ impl Instruction {
             0xDC => Some(Instruction::CALL(JumpTest::Carry)),
             0xDD => None, // Empty Byte
             0xDE => Some(Instruction::ImmedieteArithmetic(D8Operation::SBC)),
-            0xDF => todo!(), // TODO: Implement `RST 18H`
+            0xDF => Some(Instruction::RST(0x18)),
 
             0xE0 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A8,
@@ -554,7 +555,7 @@ impl Instruction {
             0xE4 => None,    // Empty Byte
             0xE5 => todo!(), // TODO: Implement `PUSH HL`
             0xE6 => Some(Instruction::ImmedieteArithmetic(D8Operation::AND)),
-            0xE7 => todo!(), // TODO: Implement `RST 20H`
+            0xE7 => Some(Instruction::RST(0x20)),
             0xE8 => Some(Instruction::ADDSP),
             0xE9 => todo!(), // TODO: Implement `JP HL`
             0xEA => Some(Instruction::LD(LoadType::Byte(
@@ -565,7 +566,7 @@ impl Instruction {
             0xEC => None, // Empty Byte
             0xED => None, // Empty Byte
             0xEE => Some(Instruction::ImmedieteArithmetic(D8Operation::XOR)),
-            0xEF => todo!(), // TODO: Implement `RST 28H`
+            0xEF => Some(Instruction::RST(0x28)),
 
             0xF0 => Some(Instruction::LD(LoadType::Byte(
                 LoadByteTarget::A,
@@ -580,7 +581,7 @@ impl Instruction {
             0xF4 => None,    // Empty Byte
             0xF5 => todo!(), // TODO: Implement `PUSH AF`
             0xF6 => Some(Instruction::ImmedieteArithmetic(D8Operation::OR)),
-            0xF7 => todo!(), // TODO: Implement `RST 30H`
+            0xF7 => Some(Instruction::RST(0x30)),
             0xF8 => Some(Instruction::LD(LoadType::HLFromSPN)),
             0xF9 => Some(Instruction::LD(LoadType::SPFromHL)),
             0xFA => Some(Instruction::LD(LoadType::Byte(
@@ -591,7 +592,7 @@ impl Instruction {
             0xFC => None,    // Empty Byte
             0xFD => None,    // Empty Byte
             0xFE => Some(Instruction::ImmedieteArithmetic(D8Operation::CP)),
-            0xFF => todo!(), // TODO: Implement `RST 38H`
+            0xFF => Some(Instruction::RST(0x38)),
         }
     }
 

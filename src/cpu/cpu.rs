@@ -1458,6 +1458,11 @@ impl CPU {
                 };
                 self.return_(jump_condition)
             }
+            Instruction::RST(n) => {
+                self.push(self.pc);
+
+                n
+            }
             Instruction::NOP => self.pc.wrapping_add(1),
             Instruction::HALT => {
                 self.is_halted = true;
