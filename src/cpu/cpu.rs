@@ -1423,19 +1423,21 @@ impl CPU {
             }
             Instruction::CALL(test) => {
                 let jump_condition: bool = match test {
-                    _ => {
-                        // TODO: support Jump conditions
-                        todo!()
-                    }
+                    JumpTest::Always => true,
+                    JumpTest::Carry => self.registers.f.carry,
+                    JumpTest::NotCarry => !self.registers.f.carry,
+                    JumpTest::NotZero => !self.registers.f.zero,
+                    JumpTest::Zero => self.registers.f.zero
                 };
                 self.call(jump_condition)
             }
             Instruction::RET(test) => {
                 let jump_condition: bool = match test {
-                    _ => {
-                        // TODO: support Jump conditions
-                        todo!()
-                    }
+                    JumpTest::Always => true,
+                    JumpTest::Carry => self.registers.f.carry,
+                    JumpTest::NotCarry => !self.registers.f.carry,
+                    JumpTest::NotZero => !self.registers.f.zero,
+                    JumpTest::Zero => self.registers.f.zero
                 };
                 self.return_(jump_condition)
             }
