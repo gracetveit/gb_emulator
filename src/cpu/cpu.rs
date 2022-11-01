@@ -1421,8 +1421,8 @@ impl CPU {
                 },
                 LoadType::AddressFromSP => {
                     let addr = self.read_next_word();
-                    let ls_byte: u8 = self.sp as u8 & 0xFF;
-                    let ms_byte: u8 = self.sp as u8 >> 8;
+                    let ls_byte = (self.sp & 0xFF) as u8;
+                    let ms_byte = (self.sp >> 8) as u8;
 
                     self.bus.write_byte(addr, ls_byte);
                     self.bus.write_byte(addr.wrapping_add(1), ms_byte);
