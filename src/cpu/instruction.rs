@@ -905,12 +905,6 @@ pub enum LoadType {
     AddressFromSP,
     HLFromSPN,
     SPFromHL,
-    // TODO: Add remaining types
-    // Word
-    // AFromIndirect
-    // IndirectFromA
-    // AFromByteAddress,
-    // ByteAddressFromA
 }
 
 pub enum LoadByteTarget {
@@ -954,7 +948,7 @@ pub enum StackTarget {
     BC,
     DE,
     HL,
-    AF, // TODO: Add more targets
+    AF,
 }
 
 pub enum D8Operation {
