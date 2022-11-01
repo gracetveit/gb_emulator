@@ -4,7 +4,7 @@ use super::{
         LoadType, SixteenBitArithmeticTarget, StackTarget,
     },
     memory_bus::MemoryBus,
-    registers::{self, FlagsRegister, Registers},
+    registers::{Registers},
 };
 
 pub struct CPU {
@@ -1852,6 +1852,10 @@ impl CPU {
         // set flags
     }
 }
+
+
+#[cfg(test)]
+use crate::cpu::registers::FlagsRegister;
 
 #[cfg(test)]
 fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> CPU {
