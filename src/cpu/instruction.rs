@@ -536,7 +536,7 @@ impl Instruction {
             0xD6 => Some(Instruction::ImmedieteArithmetic(D8Operation::SUB)),
             0xD7 => Some(Instruction::RST(0x10)),
             0xD8 => Some(Instruction::RET(JumpTest::Carry)),
-            0xD9 => todo!(), // TODO: Implement `RETI`
+            0xD9 => Some(Instruction::RETI),
             0xDA => Some(Instruction::JP(JumpTest::Carry)),
             0xDB => None, // Empty Byte
             0xDC => Some(Instruction::CALL(JumpTest::Carry)),
