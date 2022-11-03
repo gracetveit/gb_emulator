@@ -1,3 +1,4 @@
+use crate::gpu::gpu::GPU;
 use std::fs;
 
 pub struct MemoryBus {
@@ -5,25 +6,23 @@ pub struct MemoryBus {
     bios: [u8; 0xFF + 1],
     rom: [u8; 0x7FFF + 1],
     // Temp v_ram setup
-    v_ram: [u8; 0x2000],
     e_ram: [u8; 0x2000],
     w_ram: [u8; 0x5E00],
     z_ram: [u8; 0x80],
+    gpu: GPU,
 }
 
 impl MemoryBus {
     pub fn new() -> MemoryBus {
-        let mut new_bus = MemoryBus {
+        MemoryBus {
             in_bios: true,
             bios: MemoryBus::read_bios(),
             rom: [0; 0x8000],
-            v_ram: [0; 0x2000],
             e_ram: [0; 0x2000],
             w_ram: [0; 0x5E00],
             z_ram: [0; 0x80],
-        };
-        // new_bus.read_rom();
-        new_bus
+            gpu: GPU::new(),
+        }
     }
 
     fn read_bios() -> [u8; 0x100] {
@@ -83,7 +82,7 @@ impl MemoryBus {
             // ROM1
             0x4000..=0x7000 => self.rom[addr as usize],
             // Graphics: VRAM
-            0x8000..=0x9000 => self.v_ram[(addr & 0x1FFF) as usize],
+            0x8000..=0x9000 => self.gpu.read_vram(addr & 0x1FFF),
             // External RAM
             0xA000..=0xB000 => self.e_ram[(addr & 0x1FFF) as usize],
             // Working Ram
@@ -140,9 +139,7 @@ impl MemoryBus {
                 self.rom[addr as usize] = byte;
             }
             // Graphics: VRAM
-            0x8000..=0x9000 => {
-                self.v_ram[(addr & 0x1FFF) as usize] = byte;
-            }
+            0x8000..=0x9000 => self.gpu.write_vram(addr & 0x1FFF, byte),
             // External RAM
             0xA000..=0xB000 => {
                 self.e_ram[(addr & 0x1FFF) as usize] = byte;

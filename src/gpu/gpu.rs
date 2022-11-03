@@ -9,6 +9,15 @@ pub struct GPU {
 }
 
 impl GPU {
+    pub fn new() -> GPU{
+        GPU {
+            mode: GPUMode::HBlank,
+            mode_clock: 0,
+            line: 0,
+            tileset: [Tile::new(); 384],
+            vram: [0; 0x2000]
+        }
+    }
     pub fn step(&mut self, t: u16) {
         self.mode_clock += t;
         match self.mode {
@@ -108,13 +117,7 @@ enum GPUMode {
 use super::tile::Color;
 #[test]
 fn test_write_vram() {
-    let mut test_gpu = GPU {
-        mode: GPUMode::OAMRead,
-        mode_clock: 0,
-        line: 0,
-        tileset: [Tile::new(); 384],
-        vram: [0; 0x2000],
-    };
+    let mut test_gpu = GPU::new();
 
     test_gpu.write_vram(0x0010, 0xC6);
 
