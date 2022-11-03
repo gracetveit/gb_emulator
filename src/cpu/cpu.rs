@@ -14,8 +14,8 @@ pub struct CPU {
     bus: MemoryBus,
     is_halted: bool,
     is_stopped: bool,
-    m: u8,
-    t: u8,
+    m: u16,
+    t: u16,
     interrupt: Interrupt,
 }
 
@@ -62,8 +62,8 @@ impl CPU {
             }
         }
 
-        self.t += t;
-        self.m += t / 4;
+        self.t += t as u16;
+        self.m += (t as u16) / 4;
         self.pc = next_pc;
     }
 
