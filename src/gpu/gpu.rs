@@ -6,6 +6,7 @@ pub struct GPU {
     line: u8,
     tileset: [Tile; 384],
     vram: [u8; 0x2000],
+    map: bool
 }
 
 impl GPU {
@@ -15,7 +16,8 @@ impl GPU {
             mode_clock: 0,
             line: 0,
             tileset: [Tile::new(); 384],
-            vram: [0; 0x2000]
+            vram: [0; 0x2000],
+            map: false
         }
     }
     pub fn step(&mut self, t: u16) {
@@ -103,6 +105,15 @@ impl GPU {
         for x in &mut self.tileset {
             x.reset()
         }
+    }
+
+    fn render_scan() {
+        // TODO: Write out renderscan
+
+        // Identify which BG Map to use
+
+        // Plot pixel to canvas
+        // Read another tile
     }
 }
 
