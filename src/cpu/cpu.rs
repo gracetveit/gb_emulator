@@ -1324,7 +1324,7 @@ impl CPU {
 
                 match jump_condition {
                     true => {
-                        let addr = self.pc;
+                        let addr = self.pc.wrapping_add(2);
                         (self.addr8(addr, false), 12)
                     }
                     false => (self.pc.wrapping_add(2), 8),
@@ -1613,7 +1613,12 @@ impl CPU {
 
     fn sign(value: u8) -> (u8, bool) {
         let is_positive = (value >> 7) & 1 == 0;
-        let new_value = value & 0x7F;
+        let new_value = match is_positive {
+            true => value,
+            false => {
+                ((value as i8) * -1) as u8
+            },
+        };
         (new_value, is_positive)
     }
 
