@@ -1,27 +1,53 @@
 use std::fs;
 
+/*
+
+Memory map
+
+0x0000 - 0x3FFF: Rom Bank #0
+0x4000 - 0x7FFF: swithcable ROM bank
+0x8000 - 0x9FFF: Video RAM
+0xA000 - 0xBFFF: Switchable RAM bank
+0xC000 - 0xDFFF: Internal RAM
+0xE000 - 0xFDFF: Echo of Internal RAM
+0xFE00 - 0xFE9F: Sprite Attrib Mem (OAM)
+0xFEA0 - 0xFEFF: Empty but unusable for I/O (Ignore)
+0xFF00 - 0xFF7F: I/O Ports
+0xFF80 - 0xFFFE: Internal / High RAM
+0xFFFF: Interrupt Enable Register
+
+*/
+
 #[derive(Debug)]
 pub struct MemoryBus {
     pub in_bios: bool,
-    bios: [u8; 0xFF + 1],
-    rom: [u8; 0x7FFF + 1],
+    bios: [u8; 0x0100],
+    rom: [u8; 0x8000],
     // Temp v_ram setup
     v_ram: [u8; 0x2000],
     e_ram: [u8; 0x2000],
-    w_ram: [u8; 0x5E00],
-    z_ram: [u8; 0x80],
+    i_ram: [u8; 0x2000],
+    s_ram: [u8; 0x1E00],
+    oam: [u8; 0x00A0],
+    io: [u8; 0x0080],
+    high_ram: [u8; 0x007F],
+    interrupt_register: u8
 }
 
 impl MemoryBus {
     pub fn new() -> MemoryBus {
-        let mut new_bus = MemoryBus {
+        let new_bus = MemoryBus {
             in_bios: true,
             bios: MemoryBus::read_bios(),
             rom: [0; 0x8000],
             v_ram: [0; 0x2000],
             e_ram: [0; 0x2000],
-            w_ram: [0; 0x5E00],
-            z_ram: [0; 0x80],
+            i_ram: [0; 0x2000],
+            s_ram: [0; 0x1E00],
+            oam: [0; 0x00A0],
+            io: [0; 0x0080],
+            high_ram: [0; 0x007F],
+            interrupt_register: 0
         };
         // new_bus.read_rom();
         new_bus
@@ -70,120 +96,80 @@ impl MemoryBus {
     // }
 
     pub fn read_byte(&self, addr: u16) -> u8 {
-        match addr & 0xF000 {
+        match addr {
             // BIOS / ROM0
-            0x0000 => {
+            0x0000..=0xFF => {
                 if self.in_bios {
                     self.bios[addr as usize]
                 } else {
                     self.rom[addr as usize]
                 }
             }
-            // ROM0
-            0x1000..=0x3000 => self.rom[addr as usize],
-            // ROM1
-            0x4000..=0x7000 => self.rom[addr as usize],
+            // ROM0 / switchable ROM bank
+            0x0100..=0x7FFF => self.rom[addr as usize],
             // Graphics: VRAM
-            0x8000..=0x9000 => self.v_ram[(addr & 0x1FFF) as usize],
-            // External RAM
-            0xA000..=0xB000 => self.e_ram[(addr & 0x1FFF) as usize],
-            // Working Ram
-            0xC000..=0xD000 => self.w_ram[(addr & 0x1FFF) as usize],
+            0x8000..=0x9FFF => self.v_ram[(addr - 0x8000) as usize],
+            // External / Switchable RAM
+            0xA000..=0xBFFF => self.e_ram[(addr - 0xA000) as usize],
+            // Internal / Working Ram
+            0xC000..=0xDFFF => self.i_ram[(addr - 0xC000) as usize],
             // Working Ram shadow
-            0xE000 => self.w_ram[(addr & 0x1FFF) as usize],
-            // Working RAM shadow, I/o, Zero-page RAM
-            0xF000 => {
-                match addr & 0x0F00 {
-                    // Working RAM shadow
-                    0x000..=0xD00 => self.w_ram[(addr & 0x1FFF) as usize],
-                    // Graphics: objets attribute memory
-                    // OAM is 160 bytes, remaining bytes read as 0
-                    0xE00 => {
-                        if addr < 0xFEA0 {
-                            todo!() // TODO: Write GPU fn: oam
-                        } else {
-                            0
-                        }
-                    }
-                    // Zero-page
-                    0xF00 => {
-                        if addr >= 0xFF80 {
-                            self.z_ram[(addr & 0x7F) as usize]
-                        } else {
-                            // I/O control handling
-                            // Currently unhandled
-                            0
-                        }
-                    }
-                    _ => panic!(),
-                }
-            }
-            _ => panic!(),
+            0xE000..=0xFDFF => self.s_ram[(addr - 0xE000) as usize],
+            // OAM
+            0xFE00..=0xFE9F => self.oam[(addr - 0xFE00) as usize],
+            // Unused
+            0xFEA0..=0xFEFF => 0,
+            // I/O Registers
+            0xFF00..=0xFF7F => self.io[(addr - 0xFF00) as usize],
+            // High RAM
+            0xFF80..=0xFFFE => self.high_ram[(addr - 0xFF80) as usize],
+            // Interrupt Enabled Register
+            0xFFFF => self.interrupt_register
+
+            // _ => panic!(),
         }
     }
 
     pub fn write_byte(&mut self, addr: u16, byte: u8) {
-        match addr & 0xF000 {
+        match addr {
             // BIOS / ROM0
-            0x0000 => {
+            0x0000..=0xFF => {
                 if self.in_bios {
                     self.bios[addr as usize] = byte;
                 } else {
                     self.rom[addr as usize] = byte;
                 }
             }
-            // ROM0
-            0x1000..=0x3000 => {
-                self.rom[addr as usize] = byte;
-            }
-            // ROM1
-            0x4000..=0x7000 => {
-                self.rom[addr as usize] = byte;
-            }
+            // ROM0 / switchable ROM bank
+            0x0100..=0x7FFF => self.rom[addr as usize] = byte,
             // Graphics: VRAM
-            0x8000..=0x9000 => {
-                self.v_ram[(addr & 0x1FFF) as usize] = byte;
-            }
-            // External RAM
-            0xA000..=0xB000 => {
-                self.e_ram[(addr & 0x1FFF) as usize] = byte;
-            }
-            // Working Ram
-            0xC000..=0xD000 => {
-                self.w_ram[(addr & 0x1FFF) as usize] = byte;
-            }
+            0x8000..=0x9FFF => self.v_ram[(addr - 0x8000) as usize] = byte,
+            // External / Switchable RAM
+            0xA000..=0xBFFF => self.e_ram[(addr - 0xA000) as usize] = byte,
+            // Internal / Working Ram
+            0xC000..=0xDFFF => {
+                let rel_addr = addr - 0xC000;
+                self.i_ram[rel_addr as usize] = byte;
+                self.s_ram[rel_addr as usize] = byte;
+            },
             // Working Ram shadow
-            0xE000 => {
-                self.w_ram[(addr & 0x1FFF) as usize] = byte;
-            }
-            // Working RAM shadow, I/o, Zero-page RAM
-            0xF000 => {
-                match addr & 0x0F00 {
-                    // Working RAM shadow
-                    0x000..=0xD00 => {
-                        self.w_ram[(addr & 0x1FFF) as usize] = byte;
-                    }
-                    // Graphics: objets attribute memory
-                    // OAM is 160 bytes, remaining bytes read as 0
-                    0xE00 => {
-                        if addr < 0xFEA0 {
-                            todo!() // TODO: Write GPU fn: oam
-                        } else {
-                        }
-                    }
-                    // Zero-page
-                    0xF00 => {
-                        if addr >= 0xFF80 {
-                            self.z_ram[(addr & 0x7F) as usize] = byte;
-                        } else {
-                            // I/O control handling
-                            // Currently unhandled
-                        }
-                    }
-                    _ => panic!(),
-                }
-            }
-            _ => panic!(),
+            0xE000..=0xFDFF => {
+                let rel_addr = addr - 0xE000;
+                self.i_ram[rel_addr as usize] = byte;
+                self.s_ram[rel_addr as usize] = byte;
+            },
+            // OAM
+            0xFE00..=0xFE9F => self.oam[(addr - 0xFE00) as usize] = byte,
+            // Unused
+            0xFEA0..=0xFEFF => {},
+            // I/O Registers
+            0xFF00..=0xFF7F => self.io[(addr - 0xFF00) as usize] = byte,
+            // High RAM
+            0xFF80..=0xFFFE => self.high_ram[(addr - 0xFF80) as usize] = byte,
+            // Interrupt Enabled Register
+            0xFFFF => self.interrupt_register = byte
+
+            // _ => panic!(),
         }
     }
 
