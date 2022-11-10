@@ -1,4 +1,5 @@
 #[derive(Copy, Clone)]
+#[derive(Debug)]
 pub struct Tile {
     lines: [u16; 8]
 }

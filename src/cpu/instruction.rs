@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Instruction {
     ADD(ArithmeticTarget),
     ADD16(SixteenBitArithmeticTarget),
@@ -874,6 +875,7 @@ impl Instruction {
         }
     }
 }
+#[derive(Debug)]
 pub enum ArithmeticTarget {
     A,
     B,
@@ -885,6 +887,7 @@ pub enum ArithmeticTarget {
     HL,
 }
 
+#[derive(Debug)]
 pub enum SixteenBitArithmeticTarget {
     BC,
     DE,
@@ -892,6 +895,7 @@ pub enum SixteenBitArithmeticTarget {
     SP,
 }
 
+#[derive(Debug)]
 pub enum JumpTest {
     NotZero,
     Zero,
@@ -900,6 +904,7 @@ pub enum JumpTest {
     Always,
 }
 
+#[derive(Debug)]
 pub enum LoadType {
     Byte(LoadByteTarget, LoadByteSource),
     SixteenBitFromAddress(SixteenBitArithmeticTarget),
@@ -908,6 +913,7 @@ pub enum LoadType {
     SPFromHL,
 }
 
+#[derive(Debug)]
 pub enum LoadByteTarget {
     A,
     B,
@@ -926,6 +932,7 @@ pub enum LoadByteTarget {
     A8,
 }
 
+#[derive(Debug)]
 pub enum LoadByteSource {
     A,
     B,
@@ -945,6 +952,7 @@ pub enum LoadByteSource {
     A8,
 }
 
+#[derive(Debug)]
 pub enum StackTarget {
     BC,
     DE,
@@ -952,6 +960,7 @@ pub enum StackTarget {
     AF,
 }
 
+#[derive(Debug)]
 pub enum D8Operation {
     ADD,
     SUB,

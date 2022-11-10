@@ -7,11 +7,12 @@ use super::{
     registers::Registers,
 };
 
+#[derive(Debug)]
 pub struct CPU {
-    registers: Registers,
-    pc: u16,
-    sp: u16,
-    bus: MemoryBus,
+    pub registers: Registers,
+    pub pc: u16,
+    pub sp: u16,
+    pub bus: MemoryBus,
     is_halted: bool,
     is_stopped: bool,
     m: u16,
@@ -20,6 +21,20 @@ pub struct CPU {
 }
 
 impl CPU {
+    pub fn new() -> Self {
+        CPU {
+            registers: Registers::new(),
+            pc: 0,
+            sp: 0,
+            bus: MemoryBus::new(),
+            is_halted: false,
+            is_stopped: false,
+            m: 0,
+            t: 0,
+            interrupt: Interrupt::Enabled,
+        }
+    }
+
     pub fn step(&mut self) {
         if self.pc == 0x0100 {
             self.bus.in_bios = false
@@ -32,9 +47,9 @@ impl CPU {
             _ => (false, false),
         };
         if prefixed {
-            self.t += 4;
-            self.m += 1;
-            instruction_byte = self.bus.read_byte(self.pc + 1);
+            self.t = self.t.wrapping_add(4);
+            self.m = self.m.wrapping_add(1);
+            instruction_byte = self.bus.read_byte(self.pc.wrapping_add(1));
         }
 
         let (next_pc, t) =
@@ -66,8 +81,8 @@ impl CPU {
             }
         }
 
-        self.t += t as u16;
-        self.m += (t as u16) / 4;
+        self.t = self.t.wrapping_add(t as u16);
+        self.m = self.m.wrapping_add((t as u16) / 4);
         self.pc = next_pc;
     }
 
@@ -1310,7 +1325,7 @@ impl CPU {
 
                 match jump_condition {
                     true => {
-                        let addr = self.pc;
+                        let addr = self.pc.wrapping_add(2);
                         (self.addr8(addr, false), 12)
                     }
                     false => (self.pc.wrapping_add(2), 8),
@@ -1599,7 +1614,14 @@ impl CPU {
 
     fn sign(value: u8) -> (u8, bool) {
         let is_positive = (value >> 7) & 1 == 0;
-        let new_value = value & 0x7F;
+        let new_value = match is_positive {
+            true => value,
+            false => {
+                (
+                    (value & 0x80) as i8
+                ) as u8
+            },
+        };
         (new_value, is_positive)
     }
 
@@ -1640,7 +1662,7 @@ impl CPU {
     }
 
     fn read_next_word(&self) -> u16 {
-        self.bus.read_word(self.pc)
+        self.bus.read_word(self.pc.wrapping_add(1))
     }
 
     fn add(&mut self, value: u8) -> u8 {
@@ -1807,9 +1829,10 @@ impl CPU {
     }
 
     fn bit(&mut self, value: u8, n: u8) {
+        let targetted_bit: u8 = (value >> n) & 1;
         let compare_value: u8 = 1 << n;
 
-        self.registers.f.zero = value & compare_value == 0;
+        self.registers.f.zero = targetted_bit == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = true;
     }
@@ -1953,6 +1976,7 @@ impl CPU {
     }
 }
 
+#[derive(Debug)]
 enum Interrupt {
     Enabled,
     Disabled,
@@ -2439,8 +2463,8 @@ fn test_swap() {
 
 #[test]
 fn test_sign() {
-    let test_value = 0b11110000;
-    assert_eq!(CPU::sign(test_value), (0b01110000, false))
+    let test_value = 0b10000000;
+    assert_eq!(CPU::sign(test_value), (128, false))
 }
 
 #[test]

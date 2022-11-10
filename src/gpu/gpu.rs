@@ -1,5 +1,6 @@
 use super::tile::Tile;
 
+#[derive(Debug)]
 pub struct GPU {
     mode: GPUMode,
     mode_clock: u16,
@@ -117,6 +118,7 @@ impl GPU {
     }
 }
 
+#[derive(Debug)]
 enum GPUMode {
     OAMRead,
     VRAMRead,
