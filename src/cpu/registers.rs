@@ -10,6 +10,19 @@ pub struct Registers {
 }
 
 impl Registers {
+    pub fn new() -> Self {
+        Registers {
+            a: 0,
+            b: 0,
+            c: 0,
+            d: 0,
+            e: 0,
+            f: FlagsRegister::from(0),
+            h: 0,
+            l: 0,
+        }
+    }
+
     pub fn get_bc(&self) -> u16 {
         // pushes the 8 digits of b to the last 8 significant digits, and using
         // a bitwise OR operator, adds c as the first 8 digits

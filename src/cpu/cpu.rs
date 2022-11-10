@@ -20,6 +20,20 @@ pub struct CPU {
 }
 
 impl CPU {
+    pub fn new() -> Self {
+        CPU {
+            registers: Registers::new(),
+            pc: 0,
+            sp: 0,
+            bus: MemoryBus::new(),
+            is_halted: false,
+            is_stopped: false,
+            m: 0,
+            t: 0,
+            interrupt: Interrupt::Enabled,
+        }
+    }
+
     pub fn step(&mut self) {
         if self.pc == 0x0100 {
             self.bus.in_bios = false
