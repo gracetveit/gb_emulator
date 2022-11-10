@@ -1617,9 +1617,7 @@ impl CPU {
         let new_value = match is_positive {
             true => value,
             false => {
-                (
-                    (value & 0x80) as i8
-                ) as u8
+                ((value as i8).wrapping_abs()) as u8
             },
         };
         (new_value, is_positive)
@@ -2463,8 +2461,9 @@ fn test_swap() {
 
 #[test]
 fn test_sign() {
-    let test_value = 0b10000000;
-    assert_eq!(CPU::sign(test_value), (128, false))
+    let test_value = 0xFB;
+    assert_eq!(CPU::sign(test_value), (5, false));
+    assert_eq!(CPU::sign(0b10000000), (128, false));
 }
 
 #[test]
