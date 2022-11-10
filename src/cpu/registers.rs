@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Registers {
     pub a: u8,
     pub b: u8,
@@ -71,7 +72,7 @@ const SUBTRACT_FLAG_BYTE_POSTIONG: u8 = 6;
 const HALF_CARRY_FLAG_BYTE_POSITION: u8 = 5;
 const CARRY_FLAG_BYTE_POSITION: u8 = 4;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct FlagsRegister {
     pub zero: bool,
     pub subtract: bool,

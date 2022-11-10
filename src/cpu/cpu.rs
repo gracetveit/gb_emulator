@@ -7,11 +7,12 @@ use super::{
     registers::Registers,
 };
 
+#[derive(Debug)]
 pub struct CPU {
-    registers: Registers,
-    pc: u16,
-    sp: u16,
-    bus: MemoryBus,
+    pub registers: Registers,
+    pub pc: u16,
+    pub sp: u16,
+    pub bus: MemoryBus,
     is_halted: bool,
     is_stopped: bool,
     m: u8,
@@ -46,9 +47,9 @@ impl CPU {
             _ => (false, false),
         };
         if prefixed {
-            self.t += 4;
-            self.m += 1;
-            instruction_byte = self.bus.read_byte(self.pc + 1);
+            self.t = self.t.wrapping_add(4);
+            self.m = self.m.wrapping_add(1);
+            instruction_byte = self.bus.read_byte(self.pc.wrapping_add(1));
         }
 
         let (next_pc, t) =
@@ -80,8 +81,8 @@ impl CPU {
             }
         }
 
-        self.t += t;
-        self.m += t / 4;
+        self.t = self.t.wrapping_add(t);
+        self.m = self.m.wrapping_add(t / 4);
         self.pc = next_pc;
     }
 
@@ -1659,7 +1660,7 @@ impl CPU {
     }
 
     fn read_next_word(&self) -> u16 {
-        self.bus.read_word(self.pc)
+        self.bus.read_word(self.pc.wrapping_add(1))
     }
 
     fn add(&mut self, value: u8) -> u8 {
@@ -1826,9 +1827,10 @@ impl CPU {
     }
 
     fn bit(&mut self, value: u8, n: u8) {
+        let targetted_bit: u8 = (value >> n) & 1;
         let compare_value: u8 = 1 << n;
 
-        self.registers.f.zero = value & compare_value == 0;
+        self.registers.f.zero = targetted_bit == 0;
         self.registers.f.subtract = false;
         self.registers.f.half_carry = true;
     }
@@ -1972,6 +1974,7 @@ impl CPU {
     }
 }
 
+#[derive(Debug)]
 enum Interrupt {
     Enabled,
     Disabled,

@@ -1,5 +1,6 @@
 use std::fs;
 
+#[derive(Debug)]
 pub struct MemoryBus {
     pub in_bios: bool,
     bios: [u8; 0xFF + 1],
