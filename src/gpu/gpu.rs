@@ -4,7 +4,7 @@ use super::tile::Tile;
 pub struct GPU {
     mode: GPUMode,
     mode_clock: u16,
-    line: u8,
+    pub line: u8,
     tileset: [Tile; 384],
     vram: [u8; 0x2000],
     map: bool

@@ -32,7 +32,7 @@ pub struct MemoryBus {
     io: [u8; 0x0080],
     high_ram: [u8; 0x007F],
     interrupt_register: u8,
-    gpu: GPU,
+    pub gpu: GPU,
 }
 
 impl MemoryBus {

@@ -84,6 +84,8 @@ impl CPU {
         self.t = self.t.wrapping_add(t as u16);
         self.m = self.m.wrapping_add((t as u16) / 4);
         self.pc = next_pc;
+        self.bus.gpu.step(self.t);
+        self.bus.write_byte(0xFF44, self.bus.gpu.line);
     }
 
     fn execute(&mut self, instruction: Instruction) -> (u16, u8) {
