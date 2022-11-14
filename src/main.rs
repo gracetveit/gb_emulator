@@ -2,9 +2,15 @@ pub mod cpu;
 pub mod gpu;
 use std::env;
 use std::time::Instant;
+use winit_input_helper::WinitInputHelper;
+use winit::dpi::{LogicalSize};
+use winit::event::{VirtualKeyCode};
+use winit::event_loop::{EventLoop, ControlFlow};
+use winit::window::{WindowBuilder, Fullscreen};
 
 use cpu::cpu::CPU;
 use cpu::instruction::Instruction;
+use gpu::lcd::LCD;
 
 fn debug_info(cpu: &CPU, breakpoint: u16, address: u16) {
     // let now = Instant::now();
@@ -67,6 +73,47 @@ fn get_args(args: Vec<String>) -> Result<u16, String> {
 }
 
 fn main() {
+
+    let event_loop = EventLoop::new();
+    let mut input = WinitInputHelper::new();
+
+    let window = WindowBuilder::new()
+        .with_title("RustGBEmu")
+        .with_min_inner_size(LogicalSize::new(160 as f32, 144 as f32))
+        .build(&event_loop)
+        .unwrap();
+
+    let mut lcd = LCD::new(&window);
+    lcd.hello_world();
+    lcd.render();
+
+    event_loop.run(move | event, _, control_flow| {
+        if input.update(&event) {
+            // Close event
+            if input.quit() {
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
+
+            // Resize the window
+            if let Some(size) = input.window_resized() {
+                lcd.resize(size);
+            }
+
+            // Fullscreen
+            if input.key_pressed(VirtualKeyCode::F11) {
+                match window.fullscreen() {
+                    None => {
+                        window.set_fullscreen(Some(Fullscreen::Borderless(window.current_monitor())));
+                    }
+                    Some(_) => window.set_fullscreen(None),
+                }
+            }
+
+            window.request_redraw();
+        }
+    });
+
     let args: Vec<String> = env::args().collect();
     let breakpoint_arg = get_args(args);
     let mut cpu = CPU::new();
@@ -77,14 +124,14 @@ fn main() {
         Err(e) => println!("{}", e),
     }
     while cpu.pc <= 0xFF {
-    match &breakpoint_arg {
-        Ok(x) => {
-            if x == &cpu.pc {
-                logging = true;
-            }
-        },
-        _ => {}
-    }
+        match &breakpoint_arg {
+            Ok(x) => {
+                if x == &cpu.pc {
+                    logging = true;
+                }
+            },
+            _ => {}
+        }
         if logging {
             debug_info(&cpu, breakpoint, 0xFF44);
         }
