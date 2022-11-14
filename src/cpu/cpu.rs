@@ -1830,7 +1830,6 @@ impl CPU {
 
     fn bit(&mut self, value: u8, n: u8) {
         let targetted_bit: u8 = (value >> n) & 1;
-        let compare_value: u8 = 1 << n;
 
         self.registers.f.zero = targetted_bit == 0;
         self.registers.f.subtract = false;

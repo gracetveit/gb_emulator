@@ -68,14 +68,11 @@ impl LCD {
 
                 pixel.copy_from_slice(match data {
                     1 => &black,
-                    _ => &white
+                    _ => &white,
                 });
-            }
-
-            else {
+            } else {
                 pixel.copy_from_slice(&white);
             }
-
         }
     }
 }

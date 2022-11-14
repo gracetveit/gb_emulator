@@ -7,18 +7,18 @@ pub struct GPU {
     pub line: u8,
     tileset: [Tile; 384],
     vram: [u8; 0x2000],
-    map: bool
+    // map: bool,
 }
 
 impl GPU {
-    pub fn new() -> GPU{
+    pub fn new() -> GPU {
         GPU {
             mode: GPUMode::HBlank,
             mode_clock: 0,
             line: 0,
             tileset: [Tile::new(); 384],
             vram: [0; 0x2000],
-            map: false
+            // map: false,
         }
     }
     pub fn step(&mut self, t: u16) {
@@ -99,23 +99,23 @@ impl GPU {
         let tile_index = index / 16;
         let row_index = (index % 16) / 2;
 
-        self.tileset[tile_index as usize].update({ (byte1 as u16) << 8 | byte2 as u16 }, row_index)
+        self.tileset[tile_index as usize].update((byte1 as u16) << 8 | byte2 as u16, row_index)
     }
 
-    fn reset_tileset(&mut self) {
-        for x in &mut self.tileset {
-            x.reset()
-        }
-    }
+    // fn reset_tileset(&mut self) {
+    //     for x in &mut self.tileset {
+    //         x.reset()
+    //     }
+    // }
 
-    fn render_scan() {
-        // TODO: Write out renderscan
+    // fn render_scan() {
+    //     // TODO: Write out renderscan
 
-        // Identify which BG Map to use
+    //     // Identify which BG Map to use
 
-        // Plot pixel to canvas
-        // Read another tile
-    }
+    //     // Plot pixel to canvas
+    //     // Read another tile
+    // }
 }
 
 #[derive(Debug)]
