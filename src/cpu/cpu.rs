@@ -15,8 +15,8 @@ pub struct CPU {
     pub bus: MemoryBus,
     is_halted: bool,
     is_stopped: bool,
-    m: u8,
-    t: u8,
+    m: u16,
+    t: u16,
     interrupt: Interrupt,
 }
 
@@ -81,9 +81,11 @@ impl CPU {
             }
         }
 
-        self.t = self.t.wrapping_add(t);
-        self.m = self.m.wrapping_add(t / 4);
+        self.t = self.t.wrapping_add(t as u16);
+        self.m = self.m.wrapping_add((t as u16) / 4);
         self.pc = next_pc;
+        self.bus.gpu.step(self.t);
+        self.bus.write_byte(0xFF44, self.bus.gpu.line);
     }
 
     fn execute(&mut self, instruction: Instruction) -> (u16, u8) {
@@ -1828,7 +1830,6 @@ impl CPU {
 
     fn bit(&mut self, value: u8, n: u8) {
         let targetted_bit: u8 = (value >> n) & 1;
-        let compare_value: u8 = 1 << n;
 
         self.registers.f.zero = targetted_bit == 0;
         self.registers.f.subtract = false;

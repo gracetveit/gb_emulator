@@ -1,3 +1,4 @@
+use crate::gpu::gpu::GPU;
 use std::fs;
 
 /*
@@ -24,14 +25,14 @@ pub struct MemoryBus {
     bios: [u8; 0x0100],
     rom: [u8; 0x8000],
     // Temp v_ram setup
-    v_ram: [u8; 0x2000],
     e_ram: [u8; 0x2000],
     i_ram: [u8; 0x2000],
     s_ram: [u8; 0x1E00],
     oam: [u8; 0x00A0],
     io: [u8; 0x0080],
     high_ram: [u8; 0x007F],
-    interrupt_register: u8
+    interrupt_register: u8,
+    pub gpu: GPU,
 }
 
 impl MemoryBus {
@@ -40,14 +41,14 @@ impl MemoryBus {
             in_bios: true,
             bios: MemoryBus::read_bios(),
             rom: [0; 0x8000],
-            v_ram: [0; 0x2000],
             e_ram: [0; 0x2000],
             i_ram: [0; 0x2000],
             s_ram: [0; 0x1E00],
             oam: [0; 0x00A0],
             io: [0; 0x0080],
             high_ram: [0; 0x007F],
-            interrupt_register: 0
+            interrupt_register: 0,
+            gpu: GPU::new(),
         };
         // new_bus.read_rom();
         new_bus
@@ -108,7 +109,7 @@ impl MemoryBus {
             // ROM0 / switchable ROM bank
             0x0100..=0x7FFF => self.rom[addr as usize],
             // Graphics: VRAM
-            0x8000..=0x9FFF => self.v_ram[(addr - 0x8000) as usize],
+            0x8000..=0x9FFF => self.gpu.read_vram(addr - 0x8000),
             // External / Switchable RAM
             0xA000..=0xBFFF => self.e_ram[(addr - 0xA000) as usize],
             // Internal / Working Ram
@@ -143,7 +144,7 @@ impl MemoryBus {
             // ROM0 / switchable ROM bank
             0x0100..=0x7FFF => self.rom[addr as usize] = byte,
             // Graphics: VRAM
-            0x8000..=0x9FFF => self.v_ram[(addr - 0x8000) as usize] = byte,
+            0x8000..=0x9FFF => self.gpu.write_vram(addr - 0x8000, byte),
             // External / Switchable RAM
             0xA000..=0xBFFF => self.e_ram[(addr - 0xA000) as usize] = byte,
             // Internal / Working Ram
