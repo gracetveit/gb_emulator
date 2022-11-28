@@ -1,32 +1,35 @@
+use std::sync::mpsc::Sender;
+
 use super::{
     instruction::{
         ArithmeticTarget, D8Operation, Instruction, JumpTest, LoadByteSource, LoadByteTarget,
         LoadType, SixteenBitArithmeticTarget, StackTarget,
     },
-    memory_bus::MemoryBus,
     registers::Registers,
 };
+use crate::bus_channel::{BusChannel, BusData};
 
 #[derive(Debug)]
 pub struct CPU {
     pub registers: Registers,
     pub pc: u16,
     pub sp: u16,
-    pub bus: MemoryBus,
+    // pub bus: MemoryBus,
     is_halted: bool,
     is_stopped: bool,
     m: u16,
     t: u16,
     interrupt: Interrupt,
+    bus: BusChannel
 }
 
 impl CPU {
-    pub fn new() -> Self {
+    pub fn new(sender: Sender<BusData>) -> Self {
         CPU {
             registers: Registers::new(),
             pc: 0,
             sp: 0,
-            bus: MemoryBus::new(),
+            bus: BusChannel::new(sender),
             is_halted: false,
             is_stopped: false,
             m: 0,
@@ -36,9 +39,9 @@ impl CPU {
     }
 
     pub fn step(&mut self) {
-        if self.pc == 0x0100 {
-            self.bus.in_bios = false
-        }
+        // if self.pc == 0x0100 {
+        //     self.bus.in_bios = false
+        // }
 
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;
@@ -84,8 +87,8 @@ impl CPU {
         self.t = self.t.wrapping_add(t as u16);
         self.m = self.m.wrapping_add((t as u16) / 4);
         self.pc = next_pc;
-        self.bus.gpu.step(self.t);
-        self.bus.write_byte(0xFF44, self.bus.gpu.line);
+        // self.bus.gpu.step(self.t); TODO: Add GPU step
+        // self.bus.write_byte(0xFF44, self.bus.gpu.line); TODO: Add GPU writing to 0xFF44
     }
 
     fn execute(&mut self, instruction: Instruction) -> (u16, u8) {
@@ -1986,11 +1989,15 @@ enum Interrupt {
 
 #[cfg(test)]
 use crate::cpu::registers::FlagsRegister;
+#[cfg(test)]
+use std::sync::mpsc::{channel, Receiver};
 
 #[cfg(test)]
-fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> CPU {
+fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> (CPU, Receiver<BusData>) {
     // let test_bus = [8u; 0xFFF].default()
-    CPU {
+
+    let (test_bus, test_receiver) = channel::<BusData>();
+    (CPU {
         registers: Registers {
             a,
             b,
@@ -2003,18 +2010,18 @@ fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> CPU {
         },
         pc: 0,
         sp: 0,
-        bus: MemoryBus::new(),
+        bus: BusChannel::new(test_bus),
         is_halted: false,
         is_stopped: false,
         m: 0,
         t: 0,
         interrupt: Interrupt::Enabled,
-    }
+    }, test_receiver)
 }
 
 #[test]
 fn test_add() {
-    let mut test_cpu = create_cpu(15, 1, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(15, 1, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::ADD(ArithmeticTarget::B));
 
@@ -2028,7 +2035,7 @@ fn test_add() {
 
 #[test]
 fn test_adc() {
-    let mut test_cpu = create_cpu(255, 2, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(255, 2, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::ADC(ArithmeticTarget::B));
 
@@ -2042,7 +2049,7 @@ fn test_adc() {
 
 #[test]
 fn test_sub() {
-    let mut test_cpu = create_cpu(10, 5, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(10, 5, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SUB(ArithmeticTarget::B));
 
@@ -2056,7 +2063,7 @@ fn test_sub() {
 
 #[test]
 fn test_sbc() {
-    let mut test_cpu = create_cpu(0x0, 0x10, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0x0, 0x10, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SBC(ArithmeticTarget::B));
 
@@ -2066,7 +2073,7 @@ fn test_sbc() {
 
 #[test]
 fn test_and() {
-    let mut test_cpu = create_cpu(0b11110000, 0b00010000, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b11110000, 0b00010000, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::AND(ArithmeticTarget::B));
 
@@ -2080,7 +2087,7 @@ fn test_and() {
 
 #[test]
 fn test_or() {
-    let mut test_cpu = create_cpu(0b11110000, 0b00000001, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b11110000, 0b00000001, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::OR(ArithmeticTarget::B));
 
@@ -2094,7 +2101,7 @@ fn test_or() {
 
 #[test]
 fn test_xor() {
-    let mut test_cpu = create_cpu(0b11110000, 0b11110001, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b11110000, 0b11110001, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::XOR(ArithmeticTarget::B));
 
@@ -2108,7 +2115,7 @@ fn test_xor() {
 
 #[test]
 fn test_inc() {
-    let mut test_cpu = create_cpu(0, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::INC(ArithmeticTarget::A));
 
@@ -2122,7 +2129,7 @@ fn test_inc() {
 
 #[test]
 fn test_dec() {
-    let mut test_cpu = create_cpu(1, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(1, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::DEC(ArithmeticTarget::A));
 
@@ -2136,7 +2143,7 @@ fn test_dec() {
 
 #[test]
 fn test_ccf() {
-    let mut test_cpu = create_cpu(0, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::CCF);
 
@@ -2152,7 +2159,7 @@ fn test_ccf() {
 
 #[test]
 fn test_scf() {
-    let mut test_cpu = create_cpu(0, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SCF);
 
@@ -2164,7 +2171,7 @@ fn test_scf() {
 
 #[test]
 fn test_rra() {
-    let mut test_cpu = create_cpu(
+    let (mut test_cpu, _) = create_cpu(
         0b00010110,
         0,
         FlagsRegister {
@@ -2183,7 +2190,7 @@ fn test_rra() {
 
 #[test]
 fn test_rla() {
-    let mut test_cpu = create_cpu(
+    let (mut test_cpu, _) = create_cpu(
         0b000010111,
         0,
         FlagsRegister {
@@ -2202,7 +2209,7 @@ fn test_rla() {
 
 #[test]
 fn test_rrca() {
-    let mut test_cpu = create_cpu(
+    let (mut test_cpu, _) = create_cpu(
         0b00010111,
         0,
         FlagsRegister {
@@ -2227,7 +2234,7 @@ fn test_rrca() {
 
 #[test]
 fn test_rlca() {
-    let mut test_cpu = create_cpu(
+    let (mut test_cpu, _) = create_cpu(
         0b000010111,
         0,
         FlagsRegister {
@@ -2246,7 +2253,7 @@ fn test_rlca() {
 
 #[test]
 fn test_cpl() {
-    let mut test_cpu = create_cpu(0b11110000, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b11110000, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::CPL);
 
@@ -2261,7 +2268,7 @@ fn test_cpl() {
 
 #[test]
 fn test_bit() {
-    let mut test_cpu = create_cpu(0b00001111, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b00001111, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::BIT(ArithmeticTarget::A, 0));
 
@@ -2282,7 +2289,7 @@ fn test_bit() {
 
 #[test]
 fn test_res() {
-    let mut test_cpu = create_cpu(0b00001111, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b00001111, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::RES(ArithmeticTarget::A, 0));
 
@@ -2300,7 +2307,7 @@ fn test_res() {
 
 #[test]
 fn test_set() {
-    let mut test_cpu = create_cpu(0, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SET(ArithmeticTarget::A, 3));
 
@@ -2318,7 +2325,7 @@ fn test_set() {
 
 #[test]
 fn test_srl() {
-    let mut test_cpu = create_cpu(0b10001111, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b10001111, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SRL(ArithmeticTarget::A));
 
@@ -2336,7 +2343,7 @@ fn test_srl() {
 
 #[test]
 fn test_rr() {
-    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0, 0b10000001, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::RR(ArithmeticTarget::B));
 
@@ -2354,7 +2361,7 @@ fn test_rr() {
 
 #[test]
 fn test_rl() {
-    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0, 0b10000001, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::RL(ArithmeticTarget::B));
 
@@ -2372,7 +2379,7 @@ fn test_rl() {
 
 #[test]
 fn test_rrc() {
-    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0b00010000));
+    let (mut test_cpu, _) = create_cpu(0, 0b10000001, FlagsRegister::from(0b00010000));
 
     test_cpu.execute(Instruction::RRC(ArithmeticTarget::B));
 
@@ -2390,7 +2397,7 @@ fn test_rrc() {
 
 #[test]
 fn test_rlc() {
-    let mut test_cpu = create_cpu(0, 0b10000001, FlagsRegister::from(0b00010000));
+    let (mut test_cpu, _) = create_cpu(0, 0b10000001, FlagsRegister::from(0b00010000));
 
     test_cpu.execute(Instruction::RLC(ArithmeticTarget::B));
 
@@ -2408,7 +2415,7 @@ fn test_rlc() {
 
 #[test]
 fn test_sra() {
-    let mut test_cpu = create_cpu(0b10100001, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b10100001, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SRA(ArithmeticTarget::A));
 
@@ -2426,7 +2433,7 @@ fn test_sra() {
 
 #[test]
 fn test_sla() {
-    let mut test_cpu = create_cpu(0b10100001, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b10100001, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SLA(ArithmeticTarget::A));
 
@@ -2444,7 +2451,7 @@ fn test_sla() {
 
 #[test]
 fn test_swap() {
-    let mut test_cpu = create_cpu(0b11110000, 0, FlagsRegister::from(0));
+    let (mut test_cpu, _) = create_cpu(0b11110000, 0, FlagsRegister::from(0));
 
     test_cpu.execute(Instruction::SWAP(ArithmeticTarget::A));
 
