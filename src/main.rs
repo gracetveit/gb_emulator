@@ -1,5 +1,6 @@
 pub mod cpu;
 pub mod gpu;
+pub mod bus_channel;
 // use std::env;
 // use std::time::Instant;
 use winit::dpi::LogicalSize;
