@@ -1,6 +1,7 @@
 pub mod cpu;
 pub mod gpu;
 pub mod bus_channel;
+use gpu::tile::Color;
 // use std::env;
 // use std::time::Instant;
 use winit::dpi::LogicalSize;
@@ -8,6 +9,7 @@ use winit::event::VirtualKeyCode;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Fullscreen, WindowBuilder};
 use winit_input_helper::WinitInputHelper;
+use std::sync::mpsc;
 
 // use cpu::cpu::CPU;
 // use cpu::instruction::Instruction;
@@ -77,13 +79,15 @@ fn main() {
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
 
+    let (fifo_sender, lcd_receiver) = mpsc::channel::<Color>();
+
     let window = WindowBuilder::new()
         .with_title("RustGBEmu")
         .with_min_inner_size(LogicalSize::new(160 as f32, 144 as f32))
         .build(&event_loop)
         .unwrap();
 
-    let mut lcd = LCD::new(&window);
+    let mut lcd = LCD::new(&window, lcd_receiver);
     lcd.hello_world();
     lcd.render();
 
