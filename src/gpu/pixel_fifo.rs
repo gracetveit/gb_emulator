@@ -21,22 +21,25 @@ impl PixelFIFO {
             fifo: [None; 16],
             lcd_sender,
             t: 0,
-            fetcher: Fetcher::new(FetchMode::Background, memory_sender),
+            fetcher: Fetcher::new(Pallette::Background, memory_sender),
             visible_sprites,
             x: 0,
         }
     }
 
     pub fn step(&mut self, line: [[u8; 4]; 160]) -> [[u8; 4]; 160] {
-        // TODO: Outline Step Function
         let mut new_line = line;
-        // Push
+
+        new_line = self.push(new_line);
+
         if self.t % 2 == 0 && self.t <= 4 {
-            // Conditional fetch steps
+            // Conditional fetch steps on cycle 0, 2, and 4
             self.fetcher.step();
         }
 
         if self.t == 7 {
+            // On last cycle, enqueue data from fetcher
+            self.enqueue();
             self.t = 0;
         } else {
             self.t += 1;
@@ -45,24 +48,24 @@ impl PixelFIFO {
         new_line
     }
 
-    fn push(&mut self) -> Option<[u8; 4]> {
+    fn push(&mut self, line: [[u8; 4]; 160]) -> [[u8; 4]; 160] {
         // !!!
         // FIFO must contain more than 8 pixels to be able to push something out
         // !!!
         if let None = self.fifo[8] {
-            return None;
+            return line;
         };
         match self.fifo[0] {
             None => {
-                // None
-                todo!()
+                return line;
             }
             Some(pixel_data) => {
-                // TODO: convert pixel data & pallette info into actual RGBA
+                let mut new_line = line;
+                new_line[self.x as usize] = pixel_data.to_rgba();
                 self.fifo[0] = None;
                 self.fifo.rotate_left(1);
-                todo!()
-
+                self.x += 1;
+                return new_line;
             }
         }
     }
@@ -109,33 +112,36 @@ impl PixelFIFO {
             }
         }
     }
+
+    fn enqueue(&mut self) {
+        // TODO: Write out enqueue method that takes in the fetcher's data
+    }
 }
 
 struct Fetcher {
     tile_addr: Option<u8>,
     data_0: Option<u8>,
     data_1: Option<u8>,
-    mode: FetchMode,
+    pallette: Pallette,
     sender: Sender<Sender<u8>>,
 }
 
 impl Fetcher {
-    pub fn new(mode: FetchMode, sender: Sender<Sender<u8>>) -> Self {
+    pub fn new(pallette: Pallette, sender: Sender<Sender<u8>>) -> Self {
         // Constructed every new fetch
         Fetcher {
             tile_addr: None,
             data_0: None,
             data_1: None,
-            mode,
+            pallette,
             sender,
         }
     }
 
-    pub fn clear(&mut self, mode: FetchMode) {
+    pub fn clear(&mut self) {
         self.tile_addr = None;
         self.data_0 = None;
         self.data_1 = None;
-        self.mode = mode
     }
 
     pub fn step(&mut self) {
@@ -159,7 +165,20 @@ impl Fetcher {
         }
     }
 
-    fn construct_pixel_data(&self, data_0: u8, data_1: u8) -> [PixelData; 8] {
+    pub fn push(&mut self) -> [Option<PixelData>; 8] {
+        match (self.data_0, self.data_1) {
+            (Some(data_0), Some(data_1)) => {
+                let pixel_data = self.construct_pixel_data(data_0, data_1);
+                self.clear();
+                pixel_data
+            }
+            _ => {
+                [None; 8]
+            }
+        }
+    }
+
+    fn construct_pixel_data(&self, data_0: u8, data_1: u8) -> [Option<PixelData>; 8] {
         // TODO: write out construct pixel_data method
         todo!()
     }
@@ -174,6 +193,13 @@ enum FetchMode {
 struct PixelData {
     data: u8,
     pallette: Pallette,
+}
+
+impl PixelData {
+    fn to_rgba(&self) -> [u8; 4] {
+        // TODO: write out function that takes pixel data, and returns RGBA
+        todo!()
+    }
 }
 
 #[derive(Clone, Copy)]
