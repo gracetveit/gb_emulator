@@ -197,3 +197,10 @@ enum GPUMode {
 
 //     assert!(matches!(test_gpu.tileset[1].parse(0, 0), Color::DG))
 // }
+
+enum Color {
+    White,
+    LightGrey,
+    DarkGrey,
+    Black
+}
