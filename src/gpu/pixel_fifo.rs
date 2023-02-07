@@ -10,6 +10,8 @@ struct PixelFIFO {
     x: u8,
 }
 
+// TODO: Get fifo to work w/ new pallette object
+
 impl PixelFIFO {
     pub fn new(
         lcd_sender: Sender<PixelData>,
@@ -114,7 +116,31 @@ impl PixelFIFO {
     }
 
     fn enqueue(&mut self) {
-        // TODO: Write out enqueue method that takes in the fetcher's data
+        // Checks to see if the data from self.fifo[0] or self.fifo[8] is None
+        let mut i = match (self.fifo[0], self.fifo[8]) {
+            (Some(_), Some(_)) => {
+                // Do Nothing
+                9
+            }
+            (None, _) => {
+                // Fill in starting with i = 0
+                0
+            }
+            (Some(_), None) => {
+                // Fill in starting with i = 8
+                8
+            }
+        };
+        // In either case, fill each item with the data from the fetcher
+        if i != 9 {
+            let new_pixel_data = self.fetcher.push();
+            let mut l = 0;
+            while l < 8 {
+                self.fifo[i] = new_pixel_data[l];
+                i += 1;
+                l += 1;
+            }
+        }
     }
 }
 
@@ -172,16 +198,26 @@ impl Fetcher {
                 self.clear();
                 pixel_data
             }
-            _ => {
-                [None; 8]
-            }
+            _ => [None; 8],
         }
     }
 
     fn construct_pixel_data(&self, data_0: u8, data_1: u8) -> [Option<PixelData>; 8] {
-        // TODO: write out construct pixel_data method
-        todo!()
+        let mut i = 7;
+        let mut l = 0;
+        let mut return_data: [Option<PixelData>; 8] = [None; 8];
+        while i <= 0 {
+            // TODO: Check to make sure that data_0 is the 2nd significant digit
+            let data = (((data_0 >> i) & 1) << 1) + ((data_1 >> i) & 1);
+
+            return_data[l] = Some(PixelData { data, pallette: self.pallette });
+
+            i -= 1;
+            l += 1;
+        }
+        return_data
     }
+
 }
 
 enum FetchMode {
