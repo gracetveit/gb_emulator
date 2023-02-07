@@ -1,6 +1,6 @@
-use std::sync::mpsc::{SyncSender, Sender, channel};
+use std::sync::mpsc::{channel, Sender, SyncSender};
 
-use super::{tile::Tile, sprite::Sprite};
+use super::{sprite::Sprite, tile::Tile};
 
 #[derive(Debug)]
 pub struct GPU {
@@ -10,8 +10,7 @@ pub struct GPU {
     tileset: [Tile; 384],
     vram: [u8; 0x2000],
     visible_sprites: [Option<Sprite>; 10],
-    oam_sender: SyncSender<Sender<[u8; 160]>>
-    // map: bool,
+    oam_sender: SyncSender<Sender<[u8; 160]>>, // map: bool,
 }
 
 impl GPU {
@@ -23,8 +22,7 @@ impl GPU {
             tileset: [Tile::new(); 384],
             vram: [0; 0x2000],
             visible_sprites: [None; 10],
-            oam_sender
-            // map: false,
+            oam_sender, // map: false,
         }
     }
     pub fn step(&mut self, t: u16) {
@@ -104,15 +102,16 @@ impl GPU {
         self.oam_sender.send(oam_sender);
         match oam_receiver.recv() {
             Ok(data) => {
-                let mut new_sprite_array = [Sprite::from_bytes(0,0,0,0); 40];
+                let mut new_sprite_array = [Sprite::from_bytes(0, 0, 0, 0); 40];
                 let mut i = 0;
                 for sprite in data.chunks_exact(4) {
-                    new_sprite_array[i] = Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
+                    new_sprite_array[i] =
+                        Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
                     i += 1;
                 }
                 new_sprite_array
             }
-            Err(error) => panic!("{error:?}")
+            Err(error) => panic!("{error:?}"),
         }
     }
 
@@ -120,7 +119,7 @@ impl GPU {
         // Checks to see if there is room in the visible sprite array
         match self.visible_sprites[19] {
             None => true,
-            Some(_) => false
+            Some(_) => false,
         }
     }
 
@@ -198,9 +197,76 @@ enum GPUMode {
 //     assert!(matches!(test_gpu.tileset[1].parse(0, 0), Color::DG))
 // }
 
-enum Color {
-    White,
-    LightGrey,
-    DarkGrey,
-    Black
+struct Color {
+    data: [u8; 4],
+}
+
+impl Color {
+    pub fn new(data: u8) -> Self {
+        // Constructs RGBA info from the 2-bit data, and assigns it to the
+        // appropriate 2-bit 'slot'
+
+        // Black: 0x081820
+        // Dark Grey: 0x346856
+        // Light Grey: 0x88c070
+        // White: 0xe0f8d0
+
+        let rgba_data: [u8; 4] = match data {
+            0 => [0xe0, 0xf8, 0xd0, 0xFF],
+            1 => [0x88, 0xc0, 0x70, 0xFF],
+            2 => [0x34, 0x68, 0x56, 0xFF],
+            3 => [0x08, 0x18, 0x20, 0xFF],
+            _ => panic!("data is more complex than 2 bits"),
+        };
+
+        Color { data: rgba_data }
+    }
+}
+
+struct ColorPallette {
+    color_11: Color,
+    color_10: Color,
+    color_01: Color,
+    color_00: Color,
+    name: PalletteName,
+}
+
+impl ColorPallette {
+    pub fn new(name: PalletteName) -> Self {
+        let placeholder_color = Color::new(0);
+        ColorPallette {
+            color_11: placeholder_color,
+            color_10: placeholder_color,
+            color_01: placeholder_color,
+            color_00: placeholder_color,
+            name,
+        }
+    }
+
+    pub fn from_byte(name: PalletteName, data: u8) -> Self {
+        let mut temp_pallette: [u8; 4] = [0; 4];
+        let mut i = 7;
+        let l = 0;
+        while l < 4 {
+            // TODO: Check that pallette byte is correctly read
+            temp_pallette[l] = (((data >> i) & 1) << 1) + ((data >> i - 1) & 1);
+
+            i += 1;
+            i -= 2
+        }
+
+        ColorPallette {
+            name,
+            color_11: Color::new(temp_pallette[0]),
+            color_10: Color::new(temp_pallette[1]),
+            color_01: Color::new(temp_pallette[2]),
+            color_00: Color::new(temp_pallette[3])
+        }
+    }
+}
+
+enum PalletteName {
+    Background,
+    Sprite01,
+    Sprite02,
 }
