@@ -1,6 +1,8 @@
 pub mod cpu;
 pub mod gpu;
-pub mod bus_channel;
+pub mod request_response;
+use cpu::cpu::CPU;
+use gpu::gpu::GPU;
 use gpu::tile::Color;
 // use std::env;
 // use std::time::Instant;
@@ -9,7 +11,7 @@ use winit::event::VirtualKeyCode;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Fullscreen, WindowBuilder};
 use winit_input_helper::WinitInputHelper;
-use std::sync::mpsc;
+use std::sync::mpsc::{self, Sender, Receiver};
 
 // use cpu::cpu::CPU;
 // use cpu::instruction::Instruction;
@@ -142,4 +144,30 @@ fn main() {
     //     }
     //     cpu.step();
     // }
+}
+
+pub trait ProcessingUnitStep {
+    fn step(&mut self) -> u8;
+}
+
+fn processing_unit_step(processing_unit: impl ProcessingUnitStep, sender: Sender<u8>, receiver: Receiver<u8>, relative_t: i32) -> i32 {
+    // previous t is proccessing_unit.t - other_processing_unit.t
+    if relative_t <= 0 {
+        let step_t = processing_unit.step();
+        relative_t += step_t as i32;
+        sender.send(step_t).unwrap();
+    }
+    else {
+        relative_t -= match receiver.recv() {
+            Ok(x) => x as i32,
+            Err(e) => panic!("{e:}")
+        }
+    }
+
+    relative_t
+}
+
+enum ProcessingUnit {
+    CPU(CPU),
+    PPU(GPU)
 }
