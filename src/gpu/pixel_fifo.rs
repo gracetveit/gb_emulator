@@ -1,35 +1,46 @@
 use std::sync::mpsc::Sender;
 
+use crate::request_response::{Bus, Request};
+
+use super::gpu::{Pallette, PalletteCollection, PalletteName};
 use super::sprite::Sprite;
-struct PixelFIFO {
+pub struct PixelFIFO {
     fifo: [Option<PixelData>; 16],
-    lcd_sender: Sender<PixelData>,
     t: u8,
     fetcher: Fetcher,
     visible_sprites: [Option<Sprite>; 10],
-    x: u8,
+    pub x: u8,
+    // background_pallette: Pallette,
+    // sprite_pallette_01: Pallette,
+    // sprite_pallette_02: Pallette,
+    pallettes: PalletteCollection,
 }
 
 // TODO: Get fifo to work w/ new pallette object
 
 impl PixelFIFO {
     pub fn new(
-        lcd_sender: Sender<PixelData>,
-        memory_sender: Sender<Sender<u8>>,
+        // lcd_sender: Sender<PixelData>,
+        request_sender: Sender<Request>,
         visible_sprites: [Option<Sprite>; 10],
+        // background_pallette: Pallette,
+        // sprite_pallette_01: Pallette,
+        // sprite_pallette_02: Pallette,
+        pallettes: PalletteCollection,
     ) -> Self {
-        // Constructed every new line
         PixelFIFO {
             fifo: [None; 16],
-            lcd_sender,
+            // lcd_sender,
             t: 0,
-            fetcher: Fetcher::new(Pallette::Background, memory_sender),
+            fetcher: Fetcher::new(pallettes.background_pallette, Bus { request_sender }),
             visible_sprites,
             x: 0,
+            pallettes,
         }
     }
 
     pub fn step(&mut self, line: [[u8; 4]; 160]) -> [[u8; 4]; 160] {
+        // TODO: if x = 0, discard the first scrollx pixels
         let mut new_line = line;
 
         new_line = self.push(new_line);
@@ -72,7 +83,7 @@ impl PixelFIFO {
         }
     }
 
-    fn sprite_check(&mut self) -> Option<&Sprite> {
+    fn sprite_check(&mut self) -> Option<Sprite> {
         // Checks to see if the nexr 8 pixels are within a sprite's coordinates
 
         // Sprite cooordinates start 0x08 pixels to the right, and 0x10 pixels down
@@ -90,7 +101,7 @@ impl PixelFIFO {
                         continue;
                     }
 
-                    active_sprite = Some(&sprite);
+                    active_sprite = Some(sprite);
                     self.visible_sprites[i] = None;
                     break;
                 }
@@ -103,8 +114,8 @@ impl PixelFIFO {
         for i in 0..9 {
             match self.fifo[i] {
                 None => panic!("Attempting to overlay a sprite onto empty pixels"),
-                Some(base_pixel) => match base_pixel.pallette {
-                    Pallette::Background => {
+                Some(base_pixel) => match base_pixel.pallette.name {
+                    PalletteName::Background => {
                         if sprite_pixels[i].data != 0 {
                             self.fifo[i] = Some(sprite_pixels[i]);
                         }
@@ -142,6 +153,14 @@ impl PixelFIFO {
             }
         }
     }
+
+    pub fn clear(&mut self, visible_sprites: [Option<Sprite>; 10], pallettes: PalletteCollection) {
+        self.fifo = [None; 16];
+        self.t = 0;
+        self.fetcher.clear();
+        self.visible_sprites = visible_sprites;
+        self.pallettes = pallettes;
+    }
 }
 
 struct Fetcher {
@@ -149,18 +168,18 @@ struct Fetcher {
     data_0: Option<u8>,
     data_1: Option<u8>,
     pallette: Pallette,
-    sender: Sender<Sender<u8>>,
+    bus: Bus,
 }
 
 impl Fetcher {
-    pub fn new(pallette: Pallette, sender: Sender<Sender<u8>>) -> Self {
+    pub fn new(pallette: Pallette, bus: Bus) -> Self {
         // Constructed every new fetch
         Fetcher {
             tile_addr: None,
             data_0: None,
             data_1: None,
             pallette,
-            sender,
+            bus,
         }
     }
 
@@ -210,14 +229,16 @@ impl Fetcher {
             // TODO: Check to make sure that data_0 is the 2nd significant digit
             let data = (((data_0 >> i) & 1) << 1) + ((data_1 >> i) & 1);
 
-            return_data[l] = Some(PixelData { data, pallette: self.pallette });
+            return_data[l] = Some(PixelData {
+                data,
+                pallette: self.pallette,
+            });
 
             i -= 1;
             l += 1;
         }
         return_data
     }
-
 }
 
 enum FetchMode {
@@ -226,21 +247,20 @@ enum FetchMode {
 }
 
 #[derive(Clone, Copy)]
-struct PixelData {
+pub struct PixelData {
     data: u8,
     pallette: Pallette,
 }
 
 impl PixelData {
     fn to_rgba(&self) -> [u8; 4] {
-        // TODO: write out function that takes pixel data, and returns RGBA
-        todo!()
+        self.pallette.return_color(self.data)
     }
 }
 
-#[derive(Clone, Copy)]
-enum Pallette {
-    Background,
-    Sprite01,
-    Sprite02,
-}
+// #[derive(Clone, Copy)]
+// enum Pallette {
+//     Background,
+//     Sprite01,
+//     Sprite02,
+// }

@@ -36,6 +36,7 @@ impl Tile {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum Color {
     W,
     LG,

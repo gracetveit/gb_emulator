@@ -1,8 +1,13 @@
-use std::sync::mpsc::{channel, Sender, SyncSender};
+use std::sync::mpsc::{channel, Receiver, Sender, SyncSender};
 
-use super::{sprite::Sprite, tile::Tile};
+use crate::{
+    cpu::memory_bus::MemoryBus,
+    request_response::{Bus, Request},
+};
 
-#[derive(Debug)]
+use super::{pixel_fifo::PixelFIFO, sprite::Sprite, tile::Tile};
+
+// #[derive(Debug)]
 pub struct GPU {
     mode: GPUMode,
     mode_clock: u16,
@@ -10,11 +15,22 @@ pub struct GPU {
     tileset: [Tile; 384],
     vram: [u8; 0x2000],
     visible_sprites: [Option<Sprite>; 10],
-    oam_sender: SyncSender<Sender<[u8; 160]>>, // map: bool,
+    bus: Bus,
+    fifo: PixelFIFO,
+    pallettes: PalletteCollection,
+    temp_lcd: [[[u8; 4]; 160]; 144],
+    lcd_sender: Sender<[[[u8; 4]; 160]; 144]>,
+    startup: bool
 }
 
 impl GPU {
-    pub fn new(oam_sender: SyncSender<Sender<[u8; 160]>>) -> GPU {
+    pub fn new(request_sender: Sender<Request>, lcd_sender: Sender<[[[u8; 4]; 160]; 144]>) -> GPU {
+        let cloned_sender = request_sender.clone();
+        let pallettes = PalletteCollection {
+            background_pallette: Pallette::new(PalletteName::Background),
+            sprite_pallette_01: Pallette::new(PalletteName::Sprite01),
+            sprite_pallette_02: Pallette::new(PalletteName::Sprite02),
+        };
         GPU {
             mode: GPUMode::HBlank,
             mode_clock: 0,
@@ -22,44 +38,81 @@ impl GPU {
             tileset: [Tile::new(); 384],
             vram: [0; 0x2000],
             visible_sprites: [None; 10],
-            oam_sender, // map: false,
+            bus: Bus { request_sender }, // map: false,
+            fifo: PixelFIFO::new(cloned_sender, [None; 10], pallettes.clone()),
+            pallettes,
+            temp_lcd: [[[0; 4]; 160]; 144],
+            lcd_sender,
+            startup: false
         }
     }
-    pub fn step(&mut self, t: u16) {
-        self.mode_clock += t;
+    pub fn step(&mut self) -> u8 {
+        // Returns relative time
         match self.mode {
             GPUMode::OAMRead => {
                 // OAM read mode, scanline active
-                if self.mode_clock >= 80 {
-                    // Enter scanline mode 3: (reading VRAM)
-                    self.mode_clock = 0;
-                    self.mode = GPUMode::VRAMRead;
-                }
+                // TODO: Low Priority; find way to 'split up' OAM read into smaller steps
+                self.oam_search();
+                self.fifo.clear(self.visible_sprites, self.pallettes);
+                self.mode = GPUMode::PixelTransfer;
+                self.mode_clock += 80;
+                return 80;
             }
-            GPUMode::VRAMRead => {
+            GPUMode::PixelTransfer => {
                 // VRAM read mode, scanline active
                 // Treat end of mode 3 as end of scanline
-                if self.mode_clock >= 172 {
-                    // enter hblank
-                    self.mode_clock = 0;
+                let line = self.fifo.step(self.temp_lcd[self.line as usize]);
+                self.temp_lcd[self.line as usize] = line;
+                if self.fifo.x == 160 {
                     self.mode = GPUMode::HBlank;
                 }
+                // TODO: Find out why mode_clock is adding w/ overflow
+                if self.mode_clock > 456 {
+                    println!("Warning!");
+                }
+                self.mode_clock += 1;
+                return 1;
             }
             GPUMode::HBlank => {
                 // Hblank
                 // After the last hblank, push the screen data to canvas
-                if self.mode_clock >= 204 {
-                    self.mode_clock = 0;
-                    self.line += 1;
+                // if self.mode_clock >= 204 {
+                //     self.mode_clock = 0;
+                //     self.line += 1;
 
-                    if self.line == 143 {
-                        // Enter vblank
-                        self.mode = GPUMode::VBlank;
-                        // TODO: Print image to screen
-                    } else {
-                        self.mode = GPUMode::OAMRead;
-                    }
+                //     if self.line == 143 {
+                //         // Enter vblank
+                //         self.mode = GPUMode::VBlank;
+                //         // TODO: Print image to screen
+                //     } else {
+                //         self.mode = GPUMode::OAMRead;
+                //     }
+                // }
+
+                // Checks to see if Clock is %456(?) == 0
+                // Incrememts time if false, switches to new line / vblank if true
+
+                if self.mode_clock < 456 {
+                    self.mode_clock += 1;
+                    return 1;
                 }
+
+                self.mode_clock = 0;
+
+                if self.line == 143 {
+                    self.line = 0;
+                    self.mode = GPUMode::VBlank;
+                    // TODO: Send temp_LCD to LCD
+                    self.lcd_sender.send(self.temp_lcd).unwrap();
+                } else {
+                    if self.startup {
+                        self.startup = false;
+                    } else {
+                        self.line += 1;
+                    }
+                    self.mode = GPUMode::OAMRead;
+                }
+                return 1;
             }
             GPUMode::VBlank => {
                 // Vblank (10 lines)
@@ -67,12 +120,13 @@ impl GPU {
                     self.mode_clock = 0;
                     self.line += 1;
 
-                    if self.line > 153 {
+                    if self.line == 10 {
                         // Restart scanning modes
                         self.mode = GPUMode::OAMRead;
                         self.line = 0;
                     }
                 }
+                return 1;
             }
         }
     }
@@ -84,7 +138,7 @@ impl GPU {
         let sprite_array = self.read_oam();
         let mut i = 0;
         while self.available_sprite_room() && i < 40 {
-            if sprite_array[i].x_coordinate != 0 && sprite_array[0].is_visible(self.line) {
+            if sprite_array[i].x_coordinate != 0 && sprite_array[i].is_visible(self.line) {
                 self.push_sprites(sprite_array[i]);
             }
             i += 1;
@@ -96,28 +150,23 @@ impl GPU {
     }
 
     fn read_oam(&self) -> [Sprite; 40] {
-        // TODO: Write out memory-side receiver/sender logic
         // requests memory access
-        let (oam_sender, oam_receiver) = channel::<[u8; 160]>();
-        self.oam_sender.send(oam_sender);
-        match oam_receiver.recv() {
-            Ok(data) => {
-                let mut new_sprite_array = [Sprite::from_bytes(0, 0, 0, 0); 40];
-                let mut i = 0;
-                for sprite in data.chunks_exact(4) {
-                    new_sprite_array[i] =
-                        Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
-                    i += 1;
-                }
-                new_sprite_array
+        let data = self.bus.read_oam();
+        let mut new_sprite_array = [Sprite::from_bytes(0, 0, 0, 0); 40];
+        let mut i = 0;
+        for sprite in data.chunks_exact(4) {
+            while i < 40 {
+                new_sprite_array[i] =
+                    Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
+                i += 1;
             }
-            Err(error) => panic!("{error:?}"),
         }
+        new_sprite_array
     }
 
     fn available_sprite_room(&self) -> bool {
         // Checks to see if there is room in the visible sprite array
-        match self.visible_sprites[19] {
+        match self.visible_sprites[9] {
             None => true,
             Some(_) => false,
         }
@@ -181,7 +230,7 @@ impl GPU {
 #[derive(Debug)]
 enum GPUMode {
     OAMRead,
-    VRAMRead,
+    PixelTransfer,
     HBlank,
     VBlank,
 }
@@ -197,6 +246,7 @@ enum GPUMode {
 //     assert!(matches!(test_gpu.tileset[1].parse(0, 0), Color::DG))
 // }
 
+#[derive(Clone, Copy)]
 struct Color {
     data: [u8; 4],
 }
@@ -223,18 +273,19 @@ impl Color {
     }
 }
 
-struct ColorPallette {
+#[derive(Clone, Copy)]
+pub struct Pallette {
     color_11: Color,
     color_10: Color,
     color_01: Color,
     color_00: Color,
-    name: PalletteName,
+    pub name: PalletteName,
 }
 
-impl ColorPallette {
+impl Pallette {
     pub fn new(name: PalletteName) -> Self {
         let placeholder_color = Color::new(0);
-        ColorPallette {
+        Pallette {
             color_11: placeholder_color,
             color_10: placeholder_color,
             color_01: placeholder_color,
@@ -255,18 +306,36 @@ impl ColorPallette {
             i -= 2
         }
 
-        ColorPallette {
+        Pallette {
             name,
             color_11: Color::new(temp_pallette[0]),
             color_10: Color::new(temp_pallette[1]),
             color_01: Color::new(temp_pallette[2]),
-            color_00: Color::new(temp_pallette[3])
+            color_00: Color::new(temp_pallette[3]),
+        }
+    }
+
+    pub fn return_color(&self, data: u8) -> [u8; 4] {
+        match data {
+            0 => self.color_00.data,
+            1 => self.color_01.data,
+            2 => self.color_10.data,
+            3 => self.color_11.data,
+            _ => panic!("Data is not a 4-bit int"),
         }
     }
 }
 
-enum PalletteName {
+#[derive(Clone, Copy)]
+pub enum PalletteName {
     Background,
     Sprite01,
     Sprite02,
+}
+
+#[derive(Clone, Copy)]
+pub struct PalletteCollection {
+    pub background_pallette: Pallette,
+    pub sprite_pallette_01: Pallette,
+    pub sprite_pallette_02: Pallette,
 }

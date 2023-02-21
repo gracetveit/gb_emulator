@@ -14,13 +14,12 @@ pub struct CPU {
     pub registers: Registers,
     pub pc: u16,
     pub sp: u16,
-    // pub bus: MemoryBus,
     is_halted: bool,
     is_stopped: bool,
     m: u16,
     t: u16,
     interrupt: Interrupt,
-    bus: Bus
+    bus: Bus,
 }
 
 impl CPU {
@@ -39,9 +38,9 @@ impl CPU {
     }
 
     pub fn step(&mut self) -> u8 {
-        // if self.pc == 0x0100 {
-        //     self.bus.in_bios = false
-        // }
+        if self.pc == 0x0100 {
+            self.bus.load_rom();
+        }
 
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;

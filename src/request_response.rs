@@ -2,8 +2,8 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Debug)]
 pub struct Request {
-    request_info: RequestInfo,
-    responder: Sender<Response>,
+    pub request_info: RequestInfo,
+    pub responder: Sender<Response>,
 }
 
 impl Request {
@@ -54,21 +54,51 @@ impl Request {
             response_receiver,
         );
     }
+
+    fn create_read_oam_request() -> (Self, Receiver<Response>) {
+        let (response_sender, response_receiver) = channel::<Response>();
+        let request_info = RequestInfo {
+            addr: 0xFE00,
+            request_len: 160,
+            request_type: RequestType::Read
+        };
+        return (
+            Request {
+                request_info,
+                responder: response_sender,
+            },
+            response_receiver
+        )
+    }
+
+    // pub fn get_request_type(&self) -> RequestType {
+    //     match self.request_info.request_type {
+    //         RequestType::Read => {RequestType::Read},
+    //         RequestType::Write(data) => {
+    //             let mut new_data: Vec<u8> = vec![];
+    //             for x in data {
+    //                 new_data.push(x);
+    //             }
+    //             RequestType::Write(new_data)
+    //         }
+    //     }
+    // }
 }
 
 #[derive(Debug)]
-struct RequestInfo {
-    addr: u16,
-    request_len: u8,
-    request_type: RequestType,
+pub struct RequestInfo {
+    pub addr: u16,
+    pub request_len: u8,
+    pub request_type: RequestType,
 }
 #[derive(Debug)]
-enum RequestType {
+pub enum RequestType {
     Read,
     Write(Vec<u8>),
+    LoadROM,
 }
 
-enum Response {
+pub enum Response {
     Ok200(Vec<u8>),
     MemError(String),
     RequestError(String),
@@ -77,7 +107,7 @@ enum Response {
 
 #[derive(Debug)]
 pub struct Bus {
-    request_sender: Sender<Request>,
+    pub request_sender: Sender<Request>,
 }
 
 impl Bus {
@@ -117,10 +147,47 @@ impl Bus {
                 Response::Ok200(data) => panic!("Error, expected 204, received 200 with {data:?}"),
                 Response::Ok204 => {}
                 Response::MemError(err) => panic!("{err:}"),
-                Response::RequestError(err) => panic!("{err:}")
+                Response::RequestError(err) => panic!("{err:}"),
             },
+            Err(err) => panic!("{err:}"),
+        }
+    }
+
+    pub fn load_rom(&self) {
+        let (response_sender, response_receiver) = channel::<Response>();
+        let request = Request {
+            request_info: RequestInfo {
+                addr: 0,
+                request_len: 0,
+                request_type: RequestType::LoadROM,
+            },
+            responder: response_sender,
+        };
+        self.request_sender.send(request).unwrap();
+        match response_receiver.recv() {
+            Ok(response) => match response {
+                Response::Ok204 => {}
+                Response::Ok200(data) => panic!("Error, expected 204, received 200 with {data:?}"),
+                Response::MemError(err) => panic!("{err:}"),
+                Response::RequestError(err) => panic!("{err:}"),
+            },
+            Err(err) => panic!("{err:}"),
+        }
+    }
+
+    pub fn read_oam(&self) -> Vec<u8> {
+        let (request, response_receiver) = Request::create_read_oam_request();
+        self.request_sender.send(request).unwrap();
+        match response_receiver.recv() {
+            Ok(response) => match response {
+                Response::Ok200(data) => data,
+                Response::Ok204 => panic!("Error, expected data, received 204 instead"),
+                Response::MemError(err) => panic!("{err:}"),
+                Response::RequestError(err) => panic!("{err:}")
+            }
             Err(err) => panic!("{err:}")
         }
+
     }
 }
 
