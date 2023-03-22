@@ -21,7 +21,7 @@ pub struct PixelFIFO {
     window_pos: (u8, u8),
     window_enable: bool,
     window_mode: bool,
-    window_bg_tile_data_area_addr: u16
+    window_bg_tile_data_area_addr: u16,
 }
 
 // TODO: Get fifo to work w/ new pallette object
@@ -34,16 +34,20 @@ impl PixelFIFO {
         // sprite_pallette_01: Pallette,
         // sprite_pallette_02: Pallette,
     ) -> Self {
-        let pallettes = PalletteCollection{
+        let pallettes = PalletteCollection {
             background_pallette: Pallette::new(PalletteName::Background),
             sprite_pallette_01: Pallette::new(PalletteName::Sprite01),
-            sprite_pallette_02: Pallette::new(PalletteName::Sprite02)
+            sprite_pallette_02: Pallette::new(PalletteName::Sprite02),
         };
         PixelFIFO {
             fifo: [None; 16],
             // lcd_sender,
             t: 0,
-            fetcher: Fetcher::new(pallettes.background_pallette.clone(), Bus { request_sender }, 0),
+            fetcher: Fetcher::new(
+                pallettes.background_pallette.clone(),
+                Bus { request_sender },
+                0,
+            ),
             visible_sprites: [None; 10],
             x: 0,
             y: 0,
@@ -54,7 +58,7 @@ impl PixelFIFO {
             scroll: (0, 0),
             window_pos: (0, 0),
             window_enable: false,
-            window_mode: false
+            window_mode: false,
         }
     }
 
@@ -74,7 +78,6 @@ impl PixelFIFO {
         let mut new_line = line;
 
         new_line = self.push(new_line);
-
 
         if self.t % 2 == 0 && self.t <= 4 {
             // Conditional fetch steps on cycle 0, 2, and 4
@@ -197,7 +200,8 @@ impl PixelFIFO {
 
     pub fn set_pallettes(&mut self, pallettes: PalletteCollection) {
         self.pallettes = pallettes;
-        self.fetcher.set_pallettes(self.pallettes.background_pallette);
+        self.fetcher
+            .set_pallettes(self.pallettes.background_pallette);
     }
 
     pub fn set_bg_tile_map_addr(&mut self, addr: u16) {
@@ -216,7 +220,7 @@ impl PixelFIFO {
         self.window_pos = window_pos;
     }
 
-    pub fn set_window_bg_tile_data_area_addr (&mut self, addr: u16) {
+    pub fn set_window_bg_tile_data_area_addr(&mut self, addr: u16) {
         self.window_bg_tile_data_area_addr = addr;
     }
 
@@ -256,8 +260,7 @@ impl PixelFIFO {
         }
     }
 
-    fn get_current_bg_addr (&self) -> u16 {
-
+    fn get_current_bg_addr(&self) -> u16 {
         let current_tile_row_addr = ((self.scroll.1 as u16 + self.y as u16) / 8) * 32;
 
         let tile_area_addr = current_tile_row_addr + ((self.x as u16 + self.scroll.0 as u16) / 8);
@@ -269,7 +272,6 @@ impl PixelFIFO {
         if self.x < self.window_pos.0 || self.y < self.window_pos.1 {
             panic!("Trying to access window mode when outside window position")
         }
-
 
         let window_x = self.x - self.window_pos.0;
         let window_y = self.y - self.window_pos.1;
@@ -432,5 +434,4 @@ fn test_get_window_addr() {
 
     addr = fifo.get_current_window_addr();
     assert!(addr == 0x9879, "0x{addr:x} is not 0x9879");
-
 }

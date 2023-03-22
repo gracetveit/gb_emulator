@@ -1,5 +1,11 @@
-use crate::{gpu::gpu::GPU, request_response::{Request, Response, RequestType}};
-use std::{fs, sync::mpsc::{Receiver, Sender}};
+use crate::{
+    gpu::gpu::GPU,
+    request_response::{Request, RequestType, Response},
+};
+use std::{
+    fs,
+    sync::mpsc::{Receiver, Sender},
+};
 
 /*
 
@@ -23,13 +29,17 @@ Memory map
 pub struct MemoryBus {
     memory: [u8; 0x10000],
     request_receiver: Receiver<Request>,
-    rom_name: String
+    rom_name: String,
 }
 
 impl MemoryBus {
     pub fn new(request_receiver: Receiver<Request>, rom_name: String) -> MemoryBus {
         let data = MemoryBus::read_data("gb_bios.bin");
-        let mut memory_bus = MemoryBus { memory: [0; 0x10000], request_receiver, rom_name};
+        let mut memory_bus = MemoryBus {
+            memory: [0; 0x10000],
+            request_receiver,
+            rom_name,
+        };
         memory_bus.load_data(data);
         memory_bus
     }
@@ -39,9 +49,11 @@ impl MemoryBus {
             Ok(request) => {
                 let request_info = request.request_info;
                 match request_info.request_type {
-                    RequestType::Read => {
-                        self.send_read(request_info.addr, request_info.request_len, request.responder)
-                    }
+                    RequestType::Read => self.send_read(
+                        request_info.addr,
+                        request_info.request_len,
+                        request.responder,
+                    ),
                     RequestType::Write(data) => {
                         self.send_write(request_info.addr, data, request.responder)
                     }
@@ -52,7 +64,7 @@ impl MemoryBus {
                     }
                 }
             }
-            Err(err) => panic!("{err:}")
+            Err(err) => panic!("{err:}"),
         };
     }
 
@@ -68,7 +80,7 @@ impl MemoryBus {
         responder.send(Response::Ok200(data)).unwrap();
     }
     fn send_write(&mut self, addr: u16, data: Vec<u8>, responder: Sender<Response>) {
-        let mut  addr = addr as usize;
+        let mut addr = addr as usize;
         for x in data {
             self.memory[addr] = x;
             addr += 1;
@@ -80,10 +92,8 @@ impl MemoryBus {
     fn read_data(filename: &str) -> Vec<u8> {
         let file = fs::read(format!("./roms/{filename:}"));
         match file {
-            Ok(data) => {
-                data
-            }
-            Err(err) => panic!("{err:}")
+            Ok(data) => data,
+            Err(err) => panic!("{err:}"),
         }
     }
 
