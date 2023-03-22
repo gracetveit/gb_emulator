@@ -262,12 +262,22 @@ impl PixelFIFO {
 
         let tile_area_addr = current_tile_row_addr + ((self.x as u16 + self.scroll.0 as u16) / 8);
 
-        return self.window_bg_tile_data_area_addr + tile_area_addr;
+        return self.bg_tile_map_addr + tile_area_addr;
     }
 
-    fn get_window_map_addr (&self) -> u16 {
-        // TODO: Gets window_tile_map_area addr based on window pos, and x/y
-        todo!()
+    fn get_current_window_addr(&self) -> u16 {
+        if self.x < self.window_pos.0 || self.y < self.window_pos.1 {
+            panic!("Trying to access window mode when outside window position")
+        }
+
+
+        let window_x = self.x - self.window_pos.0;
+        let window_y = self.y - self.window_pos.1;
+
+        // Based upon the assumption the window map is 20x18 tiles
+
+        let i = ((window_y as u16 / 8) * 20) + (window_x as u16 / 8);
+        self.window_tile_map_addr + i
     }
 }
 
@@ -395,8 +405,9 @@ fn create_fifo() -> PixelFIFO {
 
 #[test]
 fn test_get_bg_addr() {
+    // Yes, I know these aren't the actual tile_map_area addresses, I don't care
     let mut fifo = create_fifo();
-    fifo.set_window_bg_tile_data_area_addr(0x8000);
+    fifo.set_bg_tile_map_addr(0x8000);
 
     let mut addr = fifo.get_current_bg_addr();
     assert!(addr == 0x8000, "{addr:x} is not 0x8000");
@@ -404,4 +415,22 @@ fn test_get_bg_addr() {
     fifo.set_scroll((46, 95));
     addr = fifo.get_current_bg_addr();
     assert!(addr == 0x8165, "{addr:x} is not 0x8165");
+}
+
+#[test]
+fn test_get_window_addr() {
+    let mut fifo = create_fifo();
+    fifo.set_window_tile_map_addr(0x9800);
+
+    let mut addr = fifo.get_current_window_addr();
+    assert!(addr == 0x9800, "{addr:x} is not 0x9800");
+
+    fifo.x = 32;
+    fifo.y = 64;
+
+    fifo.set_window_pos((24, 16));
+
+    addr = fifo.get_current_window_addr();
+    assert!(addr == 0x9879, "0x{addr:x} is not 0x9879");
+
 }
