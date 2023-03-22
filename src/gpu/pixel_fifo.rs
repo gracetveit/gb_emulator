@@ -256,9 +256,13 @@ impl PixelFIFO {
         }
     }
 
-    fn get_tile_map_addr (&self) -> u16 {
-        //TODO: Gets tile address from x,y pos and scroll pos
-        todo!()
+    fn get_current_bg_addr (&self) -> u16 {
+
+        let current_tile_row_addr = ((self.scroll.1 as u16 + self.y as u16) / 8) * 32;
+
+        let tile_area_addr = current_tile_row_addr + ((self.x as u16 + self.scroll.0 as u16) / 8);
+
+        return self.window_bg_tile_data_area_addr + tile_area_addr;
     }
 
     fn get_window_map_addr (&self) -> u16 {
@@ -380,3 +384,24 @@ impl PixelData {
 //     Sprite01,
 //     Sprite02,
 // }
+
+#[cfg(test)]
+fn create_fifo() -> PixelFIFO {
+    use std::sync::mpsc::channel;
+
+    let (request_sender, _) = channel();
+    PixelFIFO::new(request_sender)
+}
+
+#[test]
+fn test_get_bg_addr() {
+    let mut fifo = create_fifo();
+    fifo.set_window_bg_tile_data_area_addr(0x8000);
+
+    let mut addr = fifo.get_current_bg_addr();
+    assert!(addr == 0x8000, "{addr:x} is not 0x8000");
+
+    fifo.set_scroll((46, 95));
+    addr = fifo.get_current_bg_addr();
+    assert!(addr == 0x8165, "{addr:x} is not 0x8165");
+}
