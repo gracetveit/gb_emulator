@@ -266,7 +266,18 @@ impl PixelFIFO {
     }
 
     fn get_current_window_addr(&self) -> u16 {
-        todo!()
+        if self.x < self.window_pos.0 || self.y < self.window_pos.1 {
+            panic!("Trying to access window mode when outside window position")
+        }
+
+
+        let window_x = self.x - self.window_pos.0;
+        let window_y = self.y - self.window_pos.1;
+
+        // Based upon the assumption the window map is 20x18 tiles
+
+        let i = ((window_y as u16 / 8) * 20) + (window_x as u16 / 8);
+        self.window_tile_map_addr + i
     }
 }
 
@@ -409,8 +420,17 @@ fn test_get_bg_addr() {
 #[test]
 fn test_get_window_addr() {
     let mut fifo = create_fifo();
-    fifo.set_window_tile_map_addr(0x8000);
+    fifo.set_window_tile_map_addr(0x9800);
 
-    let addr = fifo.get_current_window_addr();
-    assert!(addr == 0x8000, "{addr:x} is not 0x8000");
+    let mut addr = fifo.get_current_window_addr();
+    assert!(addr == 0x9800, "{addr:x} is not 0x9800");
+
+    fifo.x = 32;
+    fifo.y = 64;
+
+    fifo.set_window_pos((24, 16));
+
+    addr = fifo.get_current_window_addr();
+    assert!(addr == 0x9879, "0x{addr:x} is not 0x9879");
+
 }
