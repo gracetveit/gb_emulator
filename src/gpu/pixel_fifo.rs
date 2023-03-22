@@ -265,8 +265,7 @@ impl PixelFIFO {
         return self.window_bg_tile_data_area_addr + tile_area_addr;
     }
 
-    fn get_window_map_addr (&self) -> u16 {
-        // TODO: Gets window_tile_map_area addr based on window pos, and x/y
+    fn get_current_window_addr(&self) -> u16 {
         todo!()
     }
 }
@@ -404,4 +403,13 @@ fn test_get_bg_addr() {
     fifo.set_scroll((46, 95));
     addr = fifo.get_current_bg_addr();
     assert!(addr == 0x8165, "{addr:x} is not 0x8165");
+}
+
+#[test]
+fn test_get_window_addr() {
+    let mut fifo = create_fifo();
+    fifo.set_window_bg_tile_data_area_addr(0x8000);
+
+    let addr = fifo.get_current_window_addr();
+    assert!(addr == 0x8000, "{addr:x} is not 0x8000");
 }
