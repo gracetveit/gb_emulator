@@ -1,6 +1,11 @@
 pub mod cpu;
 pub mod gpu;
-pub mod bus_channel;
+pub mod request_response;
+use cpu::cpu::CPU;
+use cpu::memory_bus::MemoryBus;
+use gpu::gpu::GPU;
+use gpu::tile::Color;
+use request_response::Request;
 // use std::env;
 // use std::time::Instant;
 use winit::dpi::LogicalSize;
@@ -8,6 +13,8 @@ use winit::event::VirtualKeyCode;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Fullscreen, WindowBuilder};
 use winit_input_helper::WinitInputHelper;
+use std::sync::mpsc::{self, Sender, Receiver, channel};
+use std::thread;
 
 // use cpu::cpu::CPU;
 // use cpu::instruction::Instruction;
@@ -74,8 +81,57 @@ use gpu::lcd::LCD;
 // }
 
 fn main() {
+    let (request_sender, request_receiver) = channel::<Request>();
+    // Create Memory Thread
+    thread::spawn(move || {
+        let mut memory = MemoryBus::new(request_receiver, String::from("hello-world.gb"));
+        loop {
+            memory.step();
+        }
+    });
+    let (ppu_timing_sender, cpu_timing_receiver) = channel::<u8>();
+    let (cpu_timing_sender, ppu_timing_receiver) = channel::<u8>();
+    // Create CPU thread
+    let cpu_request_sender = request_sender.clone();
+    thread::spawn(move || {
+        let mut cpu = CPU::new(cpu_request_sender);
+        let mut relative_t = 0;
+        loop {
+            if relative_t <= 0 {
+                let step_t = cpu.step();
+                relative_t += step_t as i32;
+                cpu_timing_sender.send(step_t).unwrap();
+            } else {
+                relative_t -= match cpu_timing_receiver.recv() {
+                    Ok(x) => x as i32,
+                    Err(e) => panic!("{e:}")
+                }
+            }
+            // let relative_t = cpu.step();
+        }
+    });
+    let (lcd_sender, lcd_receiver) = mpsc::channel::<[[[u8; 4]; 160]; 144]>();
+    // Create PPU thread
+    thread::spawn(move || {
+        let mut ppu = GPU::new(request_sender, lcd_sender);
+        let mut relative_t = 0;
+        loop {
+            if relative_t <= 0 {
+                let step_t = ppu.step();
+                relative_t += step_t as i32;
+                ppu_timing_sender.send(step_t).unwrap();
+            } else {
+                relative_t -= match ppu_timing_receiver.recv() {
+                    Ok(x) => x as i32,
+                    Err(e) => panic!("{e:}")
+                }
+            }
+        }
+    });
+    // Create LCD thread
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
+
 
     let window = WindowBuilder::new()
         .with_title("RustGBEmu")
@@ -83,8 +139,7 @@ fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut lcd = LCD::new(&window);
-    lcd.hello_world();
+    let mut lcd = LCD::new(&window, lcd_receiver);
     lcd.render();
 
     event_loop.run(move |event, _, control_flow| {
@@ -113,6 +168,7 @@ fn main() {
 
             window.request_redraw();
         }
+        lcd.push();
     });
 
     // let args: Vec<String> = env::args().collect();
@@ -138,4 +194,31 @@ fn main() {
     //     }
     //     cpu.step();
     // }
+}
+
+pub trait ProcessingUnitStep {
+    fn step(&mut self) -> u8;
+}
+
+fn processing_unit_step(f: impl Fn() -> u8, sender: Sender<u8>, receiver: Receiver<u8>, initial_relative_t: i32) -> i32 {
+    // previous t is proccessing_unit.t - other_processing_unit.t
+    let mut relative_t = initial_relative_t;
+    if relative_t <= 0 {
+        let step_t = f();
+        relative_t += step_t as i32;
+        sender.send(step_t).unwrap();
+    }
+    else {
+        relative_t -= match receiver.recv() {
+            Ok(x) => x as i32,
+            Err(e) => panic!("{e:}")
+        }
+    }
+
+    relative_t
+}
+
+enum ProcessingUnit {
+    CPU(CPU),
+    PPU(GPU)
 }

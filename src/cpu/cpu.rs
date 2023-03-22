@@ -7,29 +7,28 @@ use super::{
     },
     registers::Registers,
 };
-use crate::bus_channel::{BusChannel, BusData};
+use crate::request_response::{Request, Bus};
 
 #[derive(Debug)]
 pub struct CPU {
     pub registers: Registers,
     pub pc: u16,
     pub sp: u16,
-    // pub bus: MemoryBus,
     is_halted: bool,
     is_stopped: bool,
     m: u16,
     t: u16,
     interrupt: Interrupt,
-    bus: BusChannel
+    bus: Bus,
 }
 
 impl CPU {
-    pub fn new(sender: Sender<BusData>) -> Self {
+    pub fn new(request_sender: Sender<Request>) -> Self {
         CPU {
             registers: Registers::new(),
             pc: 0,
             sp: 0,
-            bus: BusChannel::new(sender),
+            bus: Bus {request_sender},
             is_halted: false,
             is_stopped: false,
             m: 0,
@@ -38,10 +37,10 @@ impl CPU {
         }
     }
 
-    pub fn step(&mut self) {
-        // if self.pc == 0x0100 {
-        //     self.bus.in_bios = false
-        // }
+    pub fn step(&mut self) -> u8 {
+        if self.pc == 0x0100 {
+            self.bus.load_rom();
+        }
 
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;
@@ -87,6 +86,7 @@ impl CPU {
         self.t = self.t.wrapping_add(t as u16);
         self.m = self.m.wrapping_add((t as u16) / 4);
         self.pc = next_pc;
+        return t
         // self.bus.gpu.step(self.t); TODO: Add GPU step
         // self.bus.write_byte(0xFF44, self.bus.gpu.line); TODO: Add GPU writing to 0xFF44
     }
@@ -1993,10 +1993,10 @@ use crate::cpu::registers::FlagsRegister;
 use std::sync::mpsc::{channel, Receiver};
 
 #[cfg(test)]
-fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> (CPU, Receiver<BusData>) {
+fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> (CPU, Receiver<Request>) {
     // let test_bus = [8u; 0xFFF].default()
 
-    let (test_bus, test_receiver) = channel::<BusData>();
+    let (test_sender, test_receiver) = channel::<Request>();
     (CPU {
         registers: Registers {
             a,
@@ -2010,7 +2010,7 @@ fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> (CPU, Receiver<BusData>) {
         },
         pc: 0,
         sp: 0,
-        bus: BusChannel::new(test_bus),
+        bus: Bus {request_sender: test_sender },
         is_halted: false,
         is_stopped: false,
         m: 0,
