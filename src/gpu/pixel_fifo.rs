@@ -262,7 +262,7 @@ impl PixelFIFO {
 
         let tile_area_addr = current_tile_row_addr + ((self.x as u16 + self.scroll.0 as u16) / 8);
 
-        return self.window_bg_tile_data_area_addr + tile_area_addr;
+        return self.bg_tile_map_addr + tile_area_addr;
     }
 
     fn get_current_window_addr(&self) -> u16 {
@@ -394,8 +394,9 @@ fn create_fifo() -> PixelFIFO {
 
 #[test]
 fn test_get_bg_addr() {
+    // Yes, I know these aren't the actual tile_map_area addresses, I don't care
     let mut fifo = create_fifo();
-    fifo.set_window_bg_tile_data_area_addr(0x8000);
+    fifo.set_bg_tile_map_addr(0x8000);
 
     let mut addr = fifo.get_current_bg_addr();
     assert!(addr == 0x8000, "{addr:x} is not 0x8000");
@@ -408,7 +409,7 @@ fn test_get_bg_addr() {
 #[test]
 fn test_get_window_addr() {
     let mut fifo = create_fifo();
-    fifo.set_window_bg_tile_data_area_addr(0x8000);
+    fifo.set_window_tile_map_addr(0x8000);
 
     let addr = fifo.get_current_window_addr();
     assert!(addr == 0x8000, "{addr:x} is not 0x8000");
