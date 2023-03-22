@@ -23,7 +23,7 @@ pub struct GPU {
     startup: bool,
     lcd_control_flags: LCDControlFlags,
     scroll: (u8, u8),
-    window_pos: (u8, u8)
+    window_pos: (u8, u8),
 }
 
 impl GPU {
@@ -49,7 +49,7 @@ impl GPU {
             startup: false,
             lcd_control_flags: LCDControlFlags::from_byte(0),
             scroll: (0, 0),
-            window_pos: (0, 0)
+            window_pos: (0, 0),
         }
     }
     pub fn step(&mut self) -> u8 {
@@ -95,7 +95,6 @@ impl GPU {
                 return 1;
             }
             GPUMode::HBlank => {
-
                 if self.mode_clock < 456 {
                     self.mode_clock += 1;
                     return 1;
@@ -208,7 +207,7 @@ impl GPU {
         for sprite in data.chunks_exact(4) {
             while i < 40 {
                 new_sprite_array[i] =
-                Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
+                    Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
                 i += 1;
             }
         }
@@ -276,17 +275,18 @@ impl GPU {
             self.fifo.set_sprites([None; 10])
         }
         self.fifo.set_pallettes(self.pallettes);
-        self.fifo.set_bg_tile_map_addr(self.lcd_control_flags.bg_tile_map_area);
+        self.fifo
+            .set_bg_tile_map_addr(self.lcd_control_flags.bg_tile_map_area);
         if self.lcd_control_flags.bg_window_enable_priority {
             self.fifo.set_window_enable(true);
-            self.fifo.set_window_tile_map_addr(self.lcd_control_flags.window_tile_map_area);
+            self.fifo
+                .set_window_tile_map_addr(self.lcd_control_flags.window_tile_map_area);
             self.fifo.set_window_pos(self.window_pos);
         } else {
             self.fifo.set_window_enable(false);
         }
         self.fifo.set_scroll(self.scroll);
         self.fifo.reset_x();
-
     }
 
     // fn reset_tileset(&mut self) {
@@ -429,7 +429,7 @@ struct LCDControlFlags {
     bg_tile_map_area: u16,
     obj_size: bool,
     obj_enable: bool,
-    bg_window_enable_priority: bool
+    bg_window_enable_priority: bool,
 }
 
 impl LCDControlFlags {
@@ -468,7 +468,7 @@ impl LCDControlFlags {
             bg_tile_map_area,
             obj_size,
             obj_enable,
-            bg_window_enable_priority
+            bg_window_enable_priority,
         }
     }
 }
