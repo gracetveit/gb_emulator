@@ -1,4 +1,4 @@
-use super::registers::{Registers, FlagsRegister};
+use super::registers::{FlagsRegister, Registers};
 
 const TEST_BITS: u16 = 0b1000110100101101;
 const TEST_UPPER_NIBBLE: u8 = 0b10001101;
@@ -14,7 +14,7 @@ fn set_get_bc() {
         e: 0,
         f: FlagsRegister::from(0),
         h: 0,
-        l: 0
+        l: 0,
     };
 
     test_registers.set_bc(TEST_BITS);
@@ -34,7 +34,7 @@ fn set_get_af() {
         e: 0,
         f: FlagsRegister::from(0),
         h: 0,
-        l: 0
+        l: 0,
     };
 
     test_registers.set_af(TEST_BITS);
@@ -45,7 +45,7 @@ fn set_get_af() {
 }
 
 #[test]
-fn set_get_de(){
+fn set_get_de() {
     let mut test_registers = Registers {
         a: 0,
         b: 0,
@@ -54,7 +54,7 @@ fn set_get_de(){
         e: 0,
         f: FlagsRegister::from(0),
         h: 0,
-        l: 0
+        l: 0,
     };
 
     test_registers.set_de(TEST_BITS);
@@ -65,7 +65,7 @@ fn set_get_de(){
 }
 
 #[test]
-fn set_get_hl(){
+fn set_get_hl() {
     let mut test_registers = Registers {
         a: 0,
         b: 0,
@@ -74,7 +74,7 @@ fn set_get_hl(){
         e: 0,
         f: FlagsRegister::from(0),
         h: 0,
-        l: 0
+        l: 0,
     };
 
     test_registers.set_hl(TEST_BITS);

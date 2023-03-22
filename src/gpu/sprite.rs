@@ -14,7 +14,7 @@ impl Sprite {
         let priority = flags >> 7 & 1 == 1;
         let y_flip = flags >> 6 & 1 == 1;
         let x_flip = flags >> 5 & 1 == 1;
-        let palette = flags  >> 4 & 1 == 1;
+        let palette = flags >> 4 & 1 == 1;
         Sprite {
             y_coordinate,
             x_coordinate,
@@ -22,7 +22,7 @@ impl Sprite {
             priority,
             y_flip,
             x_flip,
-            palette
+            palette,
         }
     }
 
@@ -45,5 +45,4 @@ fn test_sprite_from_bytes() {
     assert_eq!(sprite.y_flip, false);
     assert_eq!(sprite.x_flip, true);
     assert_eq!(sprite.palette, false)
-
 }

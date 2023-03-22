@@ -60,15 +60,15 @@ impl Request {
         let request_info = RequestInfo {
             addr: 0xFE00,
             request_len: 160,
-            request_type: RequestType::Read
+            request_type: RequestType::Read,
         };
         return (
             Request {
                 request_info,
                 responder: response_sender,
             },
-            response_receiver
-        )
+            response_receiver,
+        );
     }
 
     // pub fn get_request_type(&self) -> RequestType {
@@ -183,11 +183,10 @@ impl Bus {
                 Response::Ok200(data) => data,
                 Response::Ok204 => panic!("Error, expected data, received 204 instead"),
                 Response::MemError(err) => panic!("{err:}"),
-                Response::RequestError(err) => panic!("{err:}")
-            }
-            Err(err) => panic!("{err:}")
+                Response::RequestError(err) => panic!("{err:}"),
+            },
+            Err(err) => panic!("{err:}"),
         }
-
     }
 }
 

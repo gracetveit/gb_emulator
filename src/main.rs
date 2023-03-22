@@ -8,13 +8,13 @@ use gpu::tile::Color;
 use request_response::Request;
 // use std::env;
 // use std::time::Instant;
+use std::sync::mpsc::{self, channel, Receiver, Sender};
+use std::thread;
 use winit::dpi::LogicalSize;
 use winit::event::VirtualKeyCode;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Fullscreen, WindowBuilder};
 use winit_input_helper::WinitInputHelper;
-use std::sync::mpsc::{self, Sender, Receiver, channel};
-use std::thread;
 
 // use cpu::cpu::CPU;
 // use cpu::instruction::Instruction;
@@ -104,7 +104,7 @@ fn main() {
             } else {
                 relative_t -= match cpu_timing_receiver.recv() {
                     Ok(x) => x as i32,
-                    Err(e) => panic!("{e:}")
+                    Err(e) => panic!("{e:}"),
                 }
             }
             // let relative_t = cpu.step();
@@ -123,7 +123,7 @@ fn main() {
             } else {
                 relative_t -= match ppu_timing_receiver.recv() {
                     Ok(x) => x as i32,
-                    Err(e) => panic!("{e:}")
+                    Err(e) => panic!("{e:}"),
                 }
             }
         }
@@ -131,7 +131,6 @@ fn main() {
     // Create LCD thread
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
-
 
     let window = WindowBuilder::new()
         .with_title("RustGBEmu")
@@ -200,18 +199,22 @@ pub trait ProcessingUnitStep {
     fn step(&mut self) -> u8;
 }
 
-fn processing_unit_step(f: impl Fn() -> u8, sender: Sender<u8>, receiver: Receiver<u8>, initial_relative_t: i32) -> i32 {
+fn processing_unit_step(
+    f: impl Fn() -> u8,
+    sender: Sender<u8>,
+    receiver: Receiver<u8>,
+    initial_relative_t: i32,
+) -> i32 {
     // previous t is proccessing_unit.t - other_processing_unit.t
     let mut relative_t = initial_relative_t;
     if relative_t <= 0 {
         let step_t = f();
         relative_t += step_t as i32;
         sender.send(step_t).unwrap();
-    }
-    else {
+    } else {
         relative_t -= match receiver.recv() {
             Ok(x) => x as i32,
-            Err(e) => panic!("{e:}")
+            Err(e) => panic!("{e:}"),
         }
     }
 
@@ -220,5 +223,5 @@ fn processing_unit_step(f: impl Fn() -> u8, sender: Sender<u8>, receiver: Receiv
 
 enum ProcessingUnit {
     CPU(CPU),
-    PPU(GPU)
+    PPU(GPU),
 }

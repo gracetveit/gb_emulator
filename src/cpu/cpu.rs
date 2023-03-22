@@ -7,7 +7,7 @@ use super::{
     },
     registers::Registers,
 };
-use crate::request_response::{Request, Bus};
+use crate::request_response::{Bus, Request};
 
 #[derive(Debug)]
 pub struct CPU {
@@ -28,7 +28,7 @@ impl CPU {
             registers: Registers::new(),
             pc: 0,
             sp: 0,
-            bus: Bus {request_sender},
+            bus: Bus { request_sender },
             is_halted: false,
             is_stopped: false,
             m: 0,
@@ -86,7 +86,7 @@ impl CPU {
         self.t = self.t.wrapping_add(t as u16);
         self.m = self.m.wrapping_add((t as u16) / 4);
         self.pc = next_pc;
-        return t
+        return t;
         // self.bus.gpu.step(self.t); TODO: Add GPU step
         // self.bus.write_byte(0xFF44, self.bus.gpu.line); TODO: Add GPU writing to 0xFF44
     }
@@ -1621,9 +1621,7 @@ impl CPU {
         let is_positive = (value >> 7) & 1 == 0;
         let new_value = match is_positive {
             true => value,
-            false => {
-                ((value as i8).wrapping_abs()) as u8
-            },
+            false => ((value as i8).wrapping_abs()) as u8,
         };
         (new_value, is_positive)
     }
@@ -1997,26 +1995,31 @@ fn create_cpu(a: u8, b: u8, f: FlagsRegister) -> (CPU, Receiver<Request>) {
     // let test_bus = [8u; 0xFFF].default()
 
     let (test_sender, test_receiver) = channel::<Request>();
-    (CPU {
-        registers: Registers {
-            a,
-            b,
-            c: 0,
-            d: 0,
-            e: 0,
-            f,
-            h: 0,
-            l: 0,
+    (
+        CPU {
+            registers: Registers {
+                a,
+                b,
+                c: 0,
+                d: 0,
+                e: 0,
+                f,
+                h: 0,
+                l: 0,
+            },
+            pc: 0,
+            sp: 0,
+            bus: Bus {
+                request_sender: test_sender,
+            },
+            is_halted: false,
+            is_stopped: false,
+            m: 0,
+            t: 0,
+            interrupt: Interrupt::Enabled,
         },
-        pc: 0,
-        sp: 0,
-        bus: Bus {request_sender: test_sender },
-        is_halted: false,
-        is_stopped: false,
-        m: 0,
-        t: 0,
-        interrupt: Interrupt::Enabled,
-    }, test_receiver)
+        test_receiver,
+    )
 }
 
 #[test]
