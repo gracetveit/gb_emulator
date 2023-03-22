@@ -1,8 +1,6 @@
 use crate::{gpu::gpu::GPU, request_response::{Request, Response, RequestType}};
 use std::{fs, sync::mpsc::{Receiver, Sender}};
 
-use super::cart_reader::CartReader;
-
 /*
 
 Memory map
