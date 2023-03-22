@@ -10,10 +10,18 @@ pub struct PixelFIFO {
     fetcher: Fetcher,
     visible_sprites: [Option<Sprite>; 10],
     pub x: u8,
+    pub y: u8,
     // background_pallette: Pallette,
     // sprite_pallette_01: Pallette,
     // sprite_pallette_02: Pallette,
     pallettes: PalletteCollection,
+    bg_tile_map_addr: u16,
+    window_tile_map_addr: u16,
+    scroll: (u8, u8),
+    window_pos: (u8, u8),
+    window_enable: bool,
+    window_mode: bool,
+    window_bg_tile_data_area_addr: u16
 }
 
 // TODO: Get fifo to work w/ new pallette object
@@ -22,28 +30,51 @@ impl PixelFIFO {
     pub fn new(
         // lcd_sender: Sender<PixelData>,
         request_sender: Sender<Request>,
-        visible_sprites: [Option<Sprite>; 10],
         // background_pallette: Pallette,
         // sprite_pallette_01: Pallette,
         // sprite_pallette_02: Pallette,
-        pallettes: PalletteCollection,
     ) -> Self {
+        let pallettes = PalletteCollection{
+            background_pallette: Pallette::new(PalletteName::Background),
+            sprite_pallette_01: Pallette::new(PalletteName::Sprite01),
+            sprite_pallette_02: Pallette::new(PalletteName::Sprite02)
+        };
         PixelFIFO {
             fifo: [None; 16],
             // lcd_sender,
             t: 0,
-            fetcher: Fetcher::new(pallettes.background_pallette, Bus { request_sender }),
-            visible_sprites,
+            fetcher: Fetcher::new(pallettes.background_pallette.clone(), Bus { request_sender }, 0),
+            visible_sprites: [None; 10],
             x: 0,
+            y: 0,
             pallettes,
+            bg_tile_map_addr: 0,
+            window_tile_map_addr: 0,
+            window_bg_tile_data_area_addr: 0,
+            scroll: (0, 0),
+            window_pos: (0, 0),
+            window_enable: false,
+            window_mode: false
         }
     }
 
     pub fn step(&mut self, line: [[u8; 4]; 160]) -> [[u8; 4]; 160] {
         // TODO: if x = 0, discard the first scrollx pixels
+
+        // Check to see if just entered window mode
+        if self.check_window_switch() {
+            self.window_mode = true;
+            // Clear data in FIFO
+            self.fifo = [None; 16];
+            // reset fetch w/ window map
+            self.fetcher.clear();
+            self.fetcher.set_map_addr(self.window_tile_map_addr)
+        }
+
         let mut new_line = line;
 
         new_line = self.push(new_line);
+
 
         if self.t % 2 == 0 && self.t <= 4 {
             // Conditional fetch steps on cycle 0, 2, and 4
@@ -154,16 +185,90 @@ impl PixelFIFO {
         }
     }
 
-    pub fn clear(&mut self, visible_sprites: [Option<Sprite>; 10], pallettes: PalletteCollection) {
-        self.fifo = [None; 16];
-        self.t = 0;
-        self.fetcher.clear();
-        self.visible_sprites = visible_sprites;
+    // pub fn clear(&mut self) {
+    //     self.fifo = [None; 16];
+    //     self.t = 0;
+    //     self.fetcher.clear();
+    // }
+
+    pub fn set_sprites(&mut self, sprite_list: [Option<Sprite>; 10]) {
+        self.visible_sprites = sprite_list;
+    }
+
+    pub fn set_pallettes(&mut self, pallettes: PalletteCollection) {
         self.pallettes = pallettes;
+        self.fetcher.set_pallettes(self.pallettes.background_pallette);
+    }
+
+    pub fn set_bg_tile_map_addr(&mut self, addr: u16) {
+        self.bg_tile_map_addr = addr;
+    }
+
+    pub fn set_window_tile_map_addr(&mut self, addr: u16) {
+        self.window_tile_map_addr = addr;
+    }
+
+    pub fn set_scroll(&mut self, scroll: (u8, u8)) {
+        self.scroll = scroll;
+    }
+
+    pub fn set_window_pos(&mut self, window_pos: (u8, u8)) {
+        self.window_pos = window_pos;
+    }
+
+    pub fn set_window_bg_tile_data_area_addr (&mut self, addr: u16) {
+        self.window_bg_tile_data_area_addr = addr;
+    }
+
+    pub fn set_window_enable(&mut self, enable: bool) {
+        self.window_enable = enable;
+    }
+
+    pub fn reset_x(&mut self) {
+        self.x = 0;
+    }
+
+    pub fn inc_y(&mut self) {
+        self.y += 1;
+    }
+
+    pub fn reset_y(&mut self) {
+        self.y = 0;
+    }
+
+    fn check_window_switch(&self) -> bool {
+        if !self.window_enable {
+            return false;
+        }
+
+        // If we're already in window mode, we don't need to switch to window mode
+        if self.window_mode == true {
+            return false;
+        }
+
+        let x_check = self.x >= self.window_pos.0;
+        let y_check = self.y >= self.window_pos.1;
+
+        if x_check && y_check {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    fn get_tile_map_addr (&self) -> u16 {
+        //TODO: Gets tile address from x,y pos and scroll pos
+        todo!()
+    }
+
+    fn get_window_map_addr (&self) -> u16 {
+        // TODO: Gets window_tile_map_area addr based on window pos, and x/y
+        todo!()
     }
 }
 
 struct Fetcher {
+    map_addr: u16,
     tile_addr: Option<u8>,
     data_0: Option<u8>,
     data_1: Option<u8>,
@@ -172,9 +277,10 @@ struct Fetcher {
 }
 
 impl Fetcher {
-    pub fn new(pallette: Pallette, bus: Bus) -> Self {
+    pub fn new(pallette: Pallette, bus: Bus, map_addr: u16) -> Self {
         // Constructed every new fetch
         Fetcher {
+            map_addr,
             tile_addr: None,
             data_0: None,
             data_1: None,
@@ -183,16 +289,26 @@ impl Fetcher {
         }
     }
 
+    pub fn set_pallettes(&mut self, pallete: Pallette) {
+        self.pallette = pallete;
+    }
+
     pub fn clear(&mut self) {
         self.tile_addr = None;
         self.data_0 = None;
         self.data_1 = None;
     }
 
+    pub fn set_map_addr(&mut self, map_addr: u16) {
+        self.map_addr = map_addr;
+    }
+
     pub fn step(&mut self) {
         match self.tile_addr {
             None => {
                 // TODO: Fetch tile_addr
+
+                // Read Background Map based on window x,y and lcd x, y(line)
             }
             Some(tile_addr) => match self.data_0 {
                 None => {

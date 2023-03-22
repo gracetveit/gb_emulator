@@ -130,7 +130,7 @@ impl Bus {
         self.request_sender.send(request).unwrap();
         match response_receiver.recv() {
             Ok(response) => match response {
-                Response::Ok200(data) => (data[0] as u16) << 8 & (data[1] as u16),
+                Response::Ok200(data) => ((data[0] as u16) << 8) & (data[1] as u16),
                 Response::MemError(err) => panic!("{err:}"),
                 Response::RequestError(err) => panic!("{err:}"),
                 Response::Ok204 => panic!("Error, expected data, received 204"),

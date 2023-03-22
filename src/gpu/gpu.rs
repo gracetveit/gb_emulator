@@ -20,7 +20,10 @@ pub struct GPU {
     pallettes: PalletteCollection,
     temp_lcd: [[[u8; 4]; 160]; 144],
     lcd_sender: Sender<[[[u8; 4]; 160]; 144]>,
-    startup: bool
+    startup: bool,
+    lcd_control_flags: LCDControlFlags,
+    scroll: (u8, u8),
+    window_pos: (u8, u8)
 }
 
 impl GPU {
@@ -39,28 +42,46 @@ impl GPU {
             vram: [0; 0x2000],
             visible_sprites: [None; 10],
             bus: Bus { request_sender }, // map: false,
-            fifo: PixelFIFO::new(cloned_sender, [None; 10], pallettes.clone()),
+            fifo: PixelFIFO::new(cloned_sender),
             pallettes,
             temp_lcd: [[[0; 4]; 160]; 144],
             lcd_sender,
-            startup: false
+            startup: false,
+            lcd_control_flags: LCDControlFlags::from_byte(0),
+            scroll: (0, 0),
+            window_pos: (0, 0)
         }
     }
     pub fn step(&mut self) -> u8 {
         // Returns relative time
         match self.mode {
             GPUMode::OAMRead => {
-                // OAM read mode, scanline active
-                // TODO: Low Priority; find way to 'split up' OAM read into smaller steps
-                self.oam_search();
-                self.fifo.clear(self.visible_sprites, self.pallettes);
-                self.mode = GPUMode::PixelTransfer;
-                self.mode_clock += 80;
-                return 80;
+                match self.lcd_control_flags.obj_enable {
+                    true => {
+                        // OAM read mode, scanline active
+                        // TODO: Low Priority; find way to 'split up' OAM read into smaller steps
+                        self.oam_search();
+                        self.set_fifo();
+                        self.mode = GPUMode::PixelTransfer;
+                        self.mode_clock += 80;
+                        return 80;
+                    }
+                    false => {
+                        self.mode_clock += 1;
+                        if self.mode_clock == 80 {
+                            self.set_fifo();
+                            self.mode = GPUMode::PixelTransfer;
+                        }
+                        return 1;
+                    }
+                }
             }
             GPUMode::PixelTransfer => {
                 // VRAM read mode, scanline active
                 // Treat end of mode 3 as end of scanline
+
+                // Check for window; clear fifo if found
+
                 let line = self.fifo.step(self.temp_lcd[self.line as usize]);
                 self.temp_lcd[self.line as usize] = line;
                 if self.fifo.x == 160 {
@@ -74,23 +95,6 @@ impl GPU {
                 return 1;
             }
             GPUMode::HBlank => {
-                // Hblank
-                // After the last hblank, push the screen data to canvas
-                // if self.mode_clock >= 204 {
-                //     self.mode_clock = 0;
-                //     self.line += 1;
-
-                //     if self.line == 143 {
-                //         // Enter vblank
-                //         self.mode = GPUMode::VBlank;
-                //         // TODO: Print image to screen
-                //     } else {
-                //         self.mode = GPUMode::OAMRead;
-                //     }
-                // }
-
-                // Checks to see if Clock is %456(?) == 0
-                // Incrememts time if false, switches to new line / vblank if true
 
                 if self.mode_clock < 456 {
                     self.mode_clock += 1;
@@ -111,6 +115,7 @@ impl GPU {
                         self.line += 1;
                     }
                     self.mode = GPUMode::OAMRead;
+                    self.fifo.inc_y();
                 }
                 return 1;
             }
@@ -122,8 +127,16 @@ impl GPU {
 
                     if self.line == 10 {
                         // Restart scanning modes
+                        self.lcd_control();
+                        if self.lcd_control_flags.window_enable {
+                            self.window_pos();
+                        }
+                        if self.lcd_control_flags.lcd_enable {
+                            self.get_scroll();
+                        }
                         self.mode = GPUMode::OAMRead;
                         self.line = 0;
+                        self.fifo.reset_y();
                     }
                 }
                 return 1;
@@ -149,6 +162,44 @@ impl GPU {
         // Add sprite data to visible_sprites
     }
 
+    fn window_pos(&mut self) {
+        // Fetch window x pos(0xFF4B), window y pos(0xFF4A)
+        let data = self.bus.read_word(0xFF4A);
+        let y = ((data >> 8) & 0xFF) as u8;
+        let x = (data & 0xFF) as u8;
+
+        self.window_pos = (x, y);
+
+        // Called before FIFO steps
+        // Not called if window is disabled
+    }
+
+    fn get_scroll(&mut self) {
+        // TODO: fetch scroll y(0xFF42), scroll x (0xFF43)
+        let data = self.bus.read_word(0xFF42);
+        let y = ((data >> 8) & 0xFF) as u8;
+        let x = (data & 0xFF) as u8;
+
+        self.scroll = (x, y);
+
+        // Called before FIFO steps
+    }
+
+    fn lcd_control(&mut self) {
+        let data = self.bus.read_byte(0xFF40);
+        self.lcd_control_flags = LCDControlFlags::from_byte(data);
+        // Bit 7: LCD / PPU enable
+        // Bit 6: Window Tile Map Area, 0= 0x9800-0x9BFF, 1= 0x9C00-0x9FFF
+        // Bit 5: Window Enable: 0 = OFF, 1 = ON
+        // Bit 4: BG & Window Tile Data Area: 0= 0x8800-0x97FF, 1= 0x8000-0x8FFF
+        // Bit 3: BG Tile map area: 0= 0x9800-0x9BFF, 1= 0x9C00-0x9FFF
+        // Bit 2: OBJ size (Ignore for now): 0= 8x8, 1= 8x16
+        // TODO: use following to enable/disable read_oam:
+        // Bit 1: OBJ enable: 0= OFF, 1=ON
+        // TODO: figure out what this means
+        // Bit 0: BG / Window enable/priority(?): 0= OFF, 1=ON
+    }
+
     fn read_oam(&self) -> [Sprite; 40] {
         // requests memory access
         let data = self.bus.read_oam();
@@ -157,7 +208,7 @@ impl GPU {
         for sprite in data.chunks_exact(4) {
             while i < 40 {
                 new_sprite_array[i] =
-                    Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
+                Sprite::from_bytes(sprite[0], sprite[1], sprite[2], sprite[3]);
                 i += 1;
             }
         }
@@ -209,6 +260,33 @@ impl GPU {
         let row_index = (index % 16) / 2;
 
         self.tileset[tile_index as usize].update((byte1 as u16) << 8 | byte2 as u16, row_index)
+    }
+
+    fn first_tile_addr(&self, tile_map_addr: u16) -> u16 {
+        // Checks to see if in window mode or
+        let (_, scroll_y) = self.scroll;
+        tile_map_addr + (scroll_y as u16 / 8)
+    }
+
+    fn set_fifo(&mut self) {
+        // self.fifo.clear();
+        if self.lcd_control_flags.obj_enable {
+            self.fifo.set_sprites(self.visible_sprites);
+        } else {
+            self.fifo.set_sprites([None; 10])
+        }
+        self.fifo.set_pallettes(self.pallettes);
+        self.fifo.set_bg_tile_map_addr(self.lcd_control_flags.bg_tile_map_area);
+        if self.lcd_control_flags.bg_window_enable_priority {
+            self.fifo.set_window_enable(true);
+            self.fifo.set_window_tile_map_addr(self.lcd_control_flags.window_tile_map_area);
+            self.fifo.set_window_pos(self.window_pos);
+        } else {
+            self.fifo.set_window_enable(false);
+        }
+        self.fifo.set_scroll(self.scroll);
+        self.fifo.reset_x();
+
     }
 
     // fn reset_tileset(&mut self) {
@@ -338,4 +416,59 @@ pub struct PalletteCollection {
     pub background_pallette: Pallette,
     pub sprite_pallette_01: Pallette,
     pub sprite_pallette_02: Pallette,
+}
+
+struct LCDControlFlags {
+    lcd_enable: bool,
+    // Window Tile Map
+    window_tile_map_area: u16,
+    window_enable: bool,
+    // Tile Data
+    bg_window_tile_data_area: u16,
+    // BG Tile Map
+    bg_tile_map_area: u16,
+    obj_size: bool,
+    obj_enable: bool,
+    bg_window_enable_priority: bool
+}
+
+impl LCDControlFlags {
+    pub fn from_byte(data: u8) -> LCDControlFlags {
+        let lcd_enable = (data >> 7) == 1;
+        let window_tile_map_area = {
+            if ((data >> 6) & 1) == 1 {
+                0x9c00
+            } else {
+                0x9800
+            }
+        };
+        let window_enable = ((data >> 5) & 1) == 1;
+        let bg_window_tile_data_area = {
+            if ((data >> 4) & 1) == 1 {
+                0x8000
+            } else {
+                0x8800
+            }
+        };
+        let bg_tile_map_area = {
+            if ((data >> 3) & 1) == 1 {
+                0x9C00
+            } else {
+                0x9800
+            }
+        };
+        let obj_size = ((data >> 2) & 1) == 1;
+        let obj_enable = ((data >> 1) & 1) == 1;
+        let bg_window_enable_priority = (data & 1) == 1;
+        LCDControlFlags {
+            lcd_enable,
+            window_tile_map_area,
+            window_enable,
+            bg_window_tile_data_area,
+            bg_tile_map_area,
+            obj_size,
+            obj_enable,
+            bg_window_enable_priority
+        }
+    }
 }
