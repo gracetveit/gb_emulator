@@ -21,4 +21,11 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run format
-      run: cargo fmt --all
+      run: |
+        cargo fmt --all
+        git config --global user.name "gracetveit"
+        git config --global user.email "grace.tveit@gmail.com"
+
+        git add -A
+        git commit -m "formatting"
+        git push
