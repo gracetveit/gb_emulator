@@ -281,6 +281,10 @@ impl PixelFIFO {
         let i = ((window_y as u16 / 8) * 20) + (window_x as u16 / 8);
         self.window_tile_map_addr + i
     }
+
+    fn get_current_sprite_addr(&self) -> u16 {
+        todo!()
+    }
 }
 
 struct Fetcher {
@@ -434,4 +438,18 @@ fn test_get_window_addr() {
 
     addr = fifo.get_current_window_addr();
     assert!(addr == 0x9879, "0x{addr:x} is not 0x9879");
+}
+
+#[test]
+fn test_get_srpite_addr() {
+    let mut fifo = create_fifo();
+
+    let mut sprites = [None; 10];
+
+    sprites[0] = Some(Sprite::from_bytes(5, 5, 0x30, 0b10000000));
+
+    fifo.set_sprites(sprites);
+
+    let mut addr = fifo.get_current_sprite_addr();
+    assert!(addr == 0x8030, "0x{addr:x} is not 0x8030");
 }
