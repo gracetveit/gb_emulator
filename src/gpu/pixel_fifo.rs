@@ -118,9 +118,11 @@ impl PixelFIFO {
     }
 
     fn sprite_check(&mut self) -> Option<Sprite> {
-        // Checks to see if the nexr 8 pixels are within a sprite's coordinates
+        // Checks to see if the next 8 pixels are within a sprite's coordinates
 
         // Sprite cooordinates start 0x08 pixels to the right, and 0x10 pixels down
+
+        // Returns first sprite and sets it to None in the array
         let mut active_sprite = None;
         let mut i = 0;
         while i < 10 {
@@ -282,8 +284,9 @@ impl PixelFIFO {
         self.window_tile_map_addr + i
     }
 
-    fn get_current_sprite_addr(&self) -> u16 {
-        todo!()
+    fn get_current_sprite_addr(&mut self, sprite: Sprite) -> u16 {
+        // Assumes sprite is visible at the x/y coordinates (checked in step)
+        return sprite.tile_number as u16 + 0x8000;
     }
 }
 
@@ -444,12 +447,8 @@ fn test_get_window_addr() {
 fn test_get_srpite_addr() {
     let mut fifo = create_fifo();
 
-    let mut sprites = [None; 10];
+    let sprite = Sprite::from_bytes(0x10, 0x8, 0x30, 0b10000000);
 
-    sprites[0] = Some(Sprite::from_bytes(5, 5, 0x30, 0b10000000));
-
-    fifo.set_sprites(sprites);
-
-    let mut addr = fifo.get_current_sprite_addr();
+    let addr = fifo.get_current_sprite_addr(sprite);
     assert!(addr == 0x8030, "0x{addr:x} is not 0x8030");
 }
