@@ -292,11 +292,13 @@ impl PixelFIFO {
 
 struct Fetcher {
     map_addr: u16,
-    tile_addr: Option<u8>,
+    tile_num: Option<u8>,
     data_0: Option<u8>,
     data_1: Option<u8>,
     pallette: Pallette,
     bus: Bus,
+    // True: 0x8000 method, False:: 0x8800 method
+    data_starting_addr: u16,
 }
 
 impl Fetcher {
@@ -304,11 +306,12 @@ impl Fetcher {
         // Constructed every new fetch
         Fetcher {
             map_addr,
-            tile_addr: None,
+            tile_num: None,
             data_0: None,
             data_1: None,
             pallette,
             bus,
+            data_starting_addr: 0,
         }
     }
 
@@ -317,7 +320,7 @@ impl Fetcher {
     }
 
     pub fn clear(&mut self) {
-        self.tile_addr = None;
+        self.tile_num = None;
         self.data_0 = None;
         self.data_1 = None;
     }
@@ -327,26 +330,26 @@ impl Fetcher {
     }
 
     pub fn step(&mut self) {
-        match self.tile_addr {
-            None => {
-                // TODO: Fetch tile_addr
+        // match self.tile_num {
+        //     None => {
+        //         // TODO: Fetch tile_addr
 
-                // Read Background Map based on window x,y and lcd x, y(line)
-            }
-            Some(tile_addr) => match self.data_0 {
-                None => {
-                    // TODO: Fetch data_0
-                }
-                Some(data_0) => match self.data_1 {
-                    None => {
-                        // TODO: Fetch data_1
-                    }
-                    Some(data_1) => {
-                        // TOPDO: Returns Pixel Data
-                    }
-                },
-            },
-        }
+        //         // Read Background Map based on window x,y and lcd x, y(line)
+        //     }
+        //     Some(tile_addr) => match self.data_0 {
+        //         None => {
+        //             // TODO: Fetch data_0
+        //         }
+        //         Some(data_0) => match self.data_1 {
+        //             None => {
+        //                 // TODO: Fetch data_1
+        //             }
+        //             Some(data_1) => {
+        //                 // TOPDO: Returns Pixel Data
+        //             }
+        //         },
+        //     },
+        // }
     }
 
     pub fn push(&mut self) -> [Option<PixelData>; 8] {
@@ -378,6 +381,41 @@ impl Fetcher {
         }
         return_data
     }
+
+    fn set_tile_num(&mut self, data: u8) {
+        self.tile_num = Some(data);
+    }
+
+    fn set_addressing_method(&mut self, starting_address: u16) {
+        match starting_address {
+            0x8000 => {
+                self.data_starting_addr = 0x8000;
+            }
+            0x8800 => {
+                self.data_starting_addr = 0x8800;
+            }
+            _ => {
+                panic!("Incorrect Starting Address, 0x{starting_address:x} is not 0x8000 or 0x8800")
+            }
+        }
+    }
+
+    fn get_tile_data_addr(&self) -> u16 {
+        match (self.data_starting_addr, self.tile_num) {
+            (0x8800, Some(tile_num)) => {
+                let signed_tile_num = ((tile_num as i16) as i8) as i32;
+                return (36864 + (signed_tile_num * 16)) as u16;
+            }
+            (0x8000, Some(tile_num)) => {
+                return 0x8000 + (tile_num as u16 * 16);
+            }
+            _ => {
+                let starting_addr = self.data_starting_addr;
+                let tile_num = self.tile_num;
+                panic!("Mismatch between starting_addr and tile_num\n starting_addr: {starting_addr:x}\ntile_num: {tile_num:?}")
+            }
+        }
+    }
 }
 
 enum FetchMode {
@@ -397,6 +435,12 @@ impl PixelData {
     }
 }
 
+// #[derive(Clone, Copy, Debug)]
+// enum TileNum {
+//     Signed(i8),
+//     Unsigned(u8)
+// }
+
 // #[derive(Clone, Copy)]
 // enum Pallette {
 //     Background,
@@ -410,6 +454,18 @@ fn create_fifo() -> PixelFIFO {
 
     let (request_sender, _) = channel();
     PixelFIFO::new(request_sender)
+}
+
+#[cfg(test)]
+fn create_fetcher() -> Fetcher {
+    use std::sync::mpsc::channel;
+
+    let (request_sender, _) = channel();
+    Fetcher::new(
+        Pallette::new(PalletteName::Background),
+        Bus { request_sender },
+        0x9800,
+    )
 }
 
 #[test]
@@ -451,4 +507,33 @@ fn test_get_srpite_addr() {
 
     let addr = fifo.get_current_sprite_addr(sprite);
     assert!(addr == 0x8030, "0x{addr:x} is not 0x8030");
+}
+
+// #[test]
+// fn test_setting_tile_num() {
+//     let mut fetcher = create_fetcher();
+
+//     fetcher.set_addressing_method(0x8800);
+//     fetcher.set_tile_num(0x9F);
+//     if let Some(TileNum::Signed(ans)) = fetcher.tile_num {
+//         assert!(ans == -97, "{ans} is not -97")
+//     } else {
+//         panic!("Type error: Tile_num")
+//     };
+// }
+
+#[test]
+fn test_getting_correct_data_addr_from_tile_num() {
+    let mut fetcher = create_fetcher();
+
+    fetcher.set_addressing_method(0x8800);
+    fetcher.set_tile_num(0x9F);
+    let ans = fetcher.get_tile_data_addr();
+
+    assert!(ans == 0x89F0, "0x{ans:x} is not 0x89F0");
+
+    fetcher.set_tile_num(0x28);
+    let ans = fetcher.get_tile_data_addr();
+
+    assert!(ans == 0x9280, "0x{ans:x} is not 0x9280");
 }
