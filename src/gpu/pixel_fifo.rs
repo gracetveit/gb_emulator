@@ -293,12 +293,15 @@ impl PixelFIFO {
 struct Fetcher {
     map_addr: u16,
     tile_num: Option<u8>,
+    initial_address: Option<u16>,
     data_0: Option<u8>,
     data_1: Option<u8>,
     pallette: Pallette,
     bus: Bus,
     // True: 0x8000 method, False:: 0x8800 method
     data_starting_addr: u16,
+    relative_y: u8,
+    sprite: Option<Sprite>,
 }
 
 impl Fetcher {
@@ -312,6 +315,9 @@ impl Fetcher {
             pallette,
             bus,
             data_starting_addr: 0,
+            relative_y: 0,
+            initial_address: None,
+            sprite: None,
         }
     }
 
@@ -327,6 +333,10 @@ impl Fetcher {
 
     pub fn set_map_addr(&mut self, map_addr: u16) {
         self.map_addr = map_addr;
+    }
+
+    pub fn set_relative_y(&mut self, overall_y: u8) {
+        self.relative_y = overall_y % 8;
     }
 
     pub fn step(&mut self) {
@@ -400,6 +410,14 @@ impl Fetcher {
         }
     }
 
+    fn set_initial_addr(&mut self) {
+        self.initial_address = Some(self.get_tile_data_addr());
+    }
+
+    fn set_sprite(&mut self, sprite: Sprite) {
+        self.sprite = Some(sprite);
+    }
+
     fn get_tile_data_addr(&self) -> u16 {
         match (self.data_starting_addr, self.tile_num) {
             (0x8800, Some(tile_num)) => {
@@ -415,6 +433,12 @@ impl Fetcher {
                 panic!("Mismatch between starting_addr and tile_num\n starting_addr: {starting_addr:x}\ntile_num: {tile_num:?}")
             }
         }
+    }
+
+    fn get_precise_addr(&self) -> u16 {
+        return (self.relative_y as u16 * 2)
+            + self.initial_address.expect("No initial address set!");
+        // todo!()
     }
 }
 
@@ -536,4 +560,17 @@ fn test_getting_correct_data_addr_from_tile_num() {
     let ans = fetcher.get_tile_data_addr();
 
     assert!(ans == 0x9280, "0x{ans:x} is not 0x9280");
+}
+
+#[test]
+fn test_getting_correct_tile_line() {
+    let mut fetcher = create_fetcher();
+    fetcher.set_addressing_method(0x8800);
+    fetcher.set_tile_num(0x9F);
+    fetcher.set_initial_addr();
+    fetcher.set_relative_y(1);
+
+    let ans = fetcher.get_precise_addr();
+
+    assert!(ans == 0x89F2, "0x{ans:x} is not 0x9282");
 }
