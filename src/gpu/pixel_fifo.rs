@@ -72,7 +72,8 @@ impl PixelFIFO {
             self.fifo = [None; 16];
             // reset fetch w/ window map
             self.fetcher.clear();
-            self.fetcher.set_map_addr(self.window_tile_map_addr)
+            self.fetcher.set_map_addr(self.window_tile_map_addr);
+            self.fetcher.set_relative_y(self.y);
         }
 
         let mut new_line = line;
@@ -236,10 +237,12 @@ impl PixelFIFO {
 
     pub fn inc_y(&mut self) {
         self.y += 1;
+        self.fetcher.set_relative_y(self.y);
     }
 
     pub fn reset_y(&mut self) {
         self.y = 0;
+        self.fetcher.set_relative_y(self.y);
     }
 
     fn check_window_switch(&self) -> bool {
