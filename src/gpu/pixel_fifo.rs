@@ -1,6 +1,7 @@
 use std::sync::mpsc::Sender;
+use std::thread;
 
-use crate::request_response::{Bus, Request};
+use crate::request_response::{Bus, Request, RequestType};
 
 use super::gpu::{Pallette, PalletteCollection, PalletteName};
 use super::sprite::Sprite;
@@ -443,6 +444,10 @@ impl Fetcher {
             + self.initial_address.expect("No initial address set!");
         // todo!()
     }
+
+    fn fetch_tile_num(&mut self) {
+        self.tile_num = Some(self.bus.read_byte(self.map_addr));
+    }
 }
 
 enum FetchMode {
@@ -476,6 +481,9 @@ impl PixelData {
 // }
 
 #[cfg(test)]
+use std::sync::mpsc::Receiver;
+
+#[cfg(test)]
 fn create_fifo() -> PixelFIFO {
     use std::sync::mpsc::channel;
 
@@ -484,17 +492,16 @@ fn create_fifo() -> PixelFIFO {
 }
 
 #[cfg(test)]
-fn create_fetcher() -> Fetcher {
+fn create_fetcher() -> (Fetcher, Receiver<Request>) {
     use std::sync::mpsc::channel;
 
-    let (request_sender, _) = channel();
-    Fetcher::new(
+    let (request_sender, request_receiver) = channel();
+    (Fetcher::new(
         Pallette::new(PalletteName::Background),
         Bus { request_sender },
         0x9800,
-    )
+    ), request_receiver)
 }
-
 #[test]
 fn test_get_bg_addr() {
     // Yes, I know these aren't the actual tile_map_area addresses, I don't care
@@ -551,7 +558,7 @@ fn test_get_srpite_addr() {
 
 #[test]
 fn test_getting_correct_data_addr_from_tile_num() {
-    let mut fetcher = create_fetcher();
+    let (mut fetcher, _) = create_fetcher();
 
     fetcher.set_addressing_method(0x8800);
     fetcher.set_tile_num(0x9F);
@@ -567,7 +574,7 @@ fn test_getting_correct_data_addr_from_tile_num() {
 
 #[test]
 fn test_getting_correct_tile_line() {
-    let mut fetcher = create_fetcher();
+    let (mut fetcher, _) = create_fetcher();
     fetcher.set_addressing_method(0x8800);
     fetcher.set_tile_num(0x9F);
     fetcher.set_initial_addr();
@@ -576,4 +583,25 @@ fn test_getting_correct_tile_line() {
     let ans = fetcher.get_precise_addr();
 
     assert!(ans == 0x89F2, "0x{ans:x} is not 0x9282");
+}
+
+#[test]
+fn test_reading_background_map(){
+    let (mut fetcher, receiver) = create_fetcher();
+    fetcher.set_map_addr(0x9C00);
+    // fetcher.fetch_tile_addr();
+    thread::spawn(move || {
+        use crate::request_response::Response;
+        let request = receiver.recv().unwrap();
+        match (request.request_info.addr, request.request_info.request_len, request.request_info.request_type) {
+            (0x9C00, 1, RequestType::Read) => {
+                request.responder.send(Response::Ok200(vec!(0x20)))
+            }
+            _ => panic!("Incorrect request type")
+        }
+    });
+    fetcher.fetch_tile_num();
+    let ans = fetcher.tile_num.unwrap();
+    assert!(ans == 0x20, "$0x{ans:x} is not 0x20")
+
 }
