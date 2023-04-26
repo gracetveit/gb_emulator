@@ -351,18 +351,17 @@ impl Fetcher {
                 self.fetch_tile_num();
                 self.set_initial_addr();
             }
-            Some(tile_addr) => match self.data_0 {
+            Some(_) => match self.data_0 {
                 None => {
                     self.fetch_data_0();
                 }
-                Some(data_0) => match self.data_1 {
+                Some(_) => match self.data_1 {
                     None => {
                         // TODO: Fetch data_1
-                        todo!()
+                        self.fetch_data_1();
                     }
-                    Some(data_1) => {
-                        // TOPDO: Returns Pixel Data
-                        todo!()
+                    Some(_) => {
+                        // Passes
                     }
                 },
             },
@@ -454,6 +453,10 @@ impl Fetcher {
 
     fn fetch_data_0(&mut self) {
         self.data_0 = Some(self.bus.read_byte(self.get_tile_data_addr()));
+    }
+
+    fn fetch_data_1(&mut self) {
+        self.data_1 = Some(self.bus.read_byte(self.get_tile_data_addr() + 1));
     }
 }
 
@@ -615,6 +618,9 @@ fn test_reading_background_map() {
                 (0x8200, 1, RequestType::Read) => {
                     request.responder.send(Response::Ok200(vec![0x21])).unwrap();
                 }
+                (0x8201, 1, RequestType::Read) => {
+                    request.responder.send(Response::Ok200(vec![0x22])).unwrap();
+                }
                 _ => {
                     let addr = request.request_info.addr;
                     let request_len = request.request_info.request_len;
@@ -632,4 +638,8 @@ fn test_reading_background_map() {
     fetcher.fetch_data_0();
     let ans_2 = fetcher.data_0.unwrap();
     assert!(ans_2 == 0x21, "0x{ans_2:x} is not 0x21");
+
+    fetcher.fetch_data_1();
+    let ans_3 = fetcher.data_1.unwrap();
+    assert!(ans_3 == 0x22, "0x{ans_3:x} is not 0x22")
 }
