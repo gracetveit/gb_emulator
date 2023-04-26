@@ -344,26 +344,29 @@ impl Fetcher {
     }
 
     pub fn step(&mut self) {
-        // match self.tile_num {
-        //     None => {
-        //         // TODO: Fetch tile_addr
+        match self.tile_num {
+            None => {
+                // TODO: Fetch tile_addr
 
-        //         // Read Background Map based on window x,y and lcd x, y(line)
-        //     }
-        //     Some(tile_addr) => match self.data_0 {
-        //         None => {
-        //             // TODO: Fetch data_0
-        //         }
-        //         Some(data_0) => match self.data_1 {
-        //             None => {
-        //                 // TODO: Fetch data_1
-        //             }
-        //             Some(data_1) => {
-        //                 // TOPDO: Returns Pixel Data
-        //             }
-        //         },
-        //     },
-        // }
+                self.fetch_tile_num();
+                self.set_initial_addr();
+            }
+            Some(tile_addr) => match self.data_0 {
+                None => {
+                    self.fetch_data_0();
+                }
+                Some(data_0) => match self.data_1 {
+                    None => {
+                        // TODO: Fetch data_1
+                        todo!()
+                    }
+                    Some(data_1) => {
+                        // TOPDO: Returns Pixel Data
+                        todo!()
+                    }
+                },
+            },
+        }
     }
 
     pub fn push(&mut self) -> [Option<PixelData>; 8] {
@@ -448,6 +451,10 @@ impl Fetcher {
     fn fetch_tile_num(&mut self) {
         self.tile_num = Some(self.bus.read_byte(self.map_addr));
     }
+
+    fn fetch_data_0(&mut self) {
+        self.data_0 = Some(self.bus.read_byte(self.get_tile_data_addr()));
+    }
 }
 
 enum FetchMode {
@@ -496,11 +503,14 @@ fn create_fetcher() -> (Fetcher, Receiver<Request>) {
     use std::sync::mpsc::channel;
 
     let (request_sender, request_receiver) = channel();
-    (Fetcher::new(
-        Pallette::new(PalletteName::Background),
-        Bus { request_sender },
-        0x9800,
-    ), request_receiver)
+    (
+        Fetcher::new(
+            Pallette::new(PalletteName::Background),
+            Bus { request_sender },
+            0x9800,
+        ),
+        request_receiver,
+    )
 }
 #[test]
 fn test_get_bg_addr() {
@@ -586,22 +596,40 @@ fn test_getting_correct_tile_line() {
 }
 
 #[test]
-fn test_reading_background_map(){
+fn test_reading_background_map() {
     let (mut fetcher, receiver) = create_fetcher();
     fetcher.set_map_addr(0x9C00);
     // fetcher.fetch_tile_addr();
     thread::spawn(move || {
         use crate::request_response::Response;
-        let request = receiver.recv().unwrap();
-        match (request.request_info.addr, request.request_info.request_len, request.request_info.request_type) {
-            (0x9C00, 1, RequestType::Read) => {
-                request.responder.send(Response::Ok200(vec!(0x20)))
+        loop {
+            let request = receiver.recv().unwrap();
+            match (
+                request.request_info.addr,
+                request.request_info.request_len,
+                request.request_info.request_type,
+            ) {
+                (0x9C00, 1, RequestType::Read) => {
+                    request.responder.send(Response::Ok200(vec![0x20])).unwrap();
+                }
+                (0x8200, 1, RequestType::Read) => {
+                    request.responder.send(Response::Ok200(vec![0x21])).unwrap();
+                }
+                _ => {
+                    let addr = request.request_info.addr;
+                    let request_len = request.request_info.request_len;
+                    panic!("Error: $0x{addr:x}, {request_len}")
+                }
             }
-            _ => panic!("Incorrect request type")
         }
     });
     fetcher.fetch_tile_num();
     let ans = fetcher.tile_num.unwrap();
-    assert!(ans == 0x20, "$0x{ans:x} is not 0x20")
+    assert!(ans == 0x20, "$0x{ans:x} is not 0x20");
 
+    fetcher.set_addressing_method(0x8000);
+    fetcher.set_initial_addr();
+    fetcher.fetch_data_0();
+    let ans_2 = fetcher.data_0.unwrap();
+    assert!(ans_2 == 0x21, "0x{ans_2:x} is not 0x21");
 }
