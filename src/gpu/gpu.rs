@@ -276,6 +276,8 @@ impl GPU {
         }
         self.fifo.set_pallettes(self.pallettes);
         self.fifo
+            .set_window_bg_tile_data_area_addr(self.lcd_control_flags.bg_window_tile_data_area);
+        self.fifo
             .set_bg_tile_map_addr(self.lcd_control_flags.bg_tile_map_area);
         if self.lcd_control_flags.bg_window_enable_priority {
             self.fifo.set_window_enable(true);
@@ -287,6 +289,7 @@ impl GPU {
         }
         self.fifo.set_scroll(self.scroll);
         self.fifo.reset_x();
+        self.fifo.set_fetcher();
     }
 
     // fn reset_tileset(&mut self) {
