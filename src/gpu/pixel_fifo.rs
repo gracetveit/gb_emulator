@@ -232,6 +232,14 @@ impl PixelFIFO {
         self.window_enable = enable;
     }
 
+    pub fn set_fetcher(&mut self) {
+        self.fetcher
+            .set_addressing_method(self.window_bg_tile_data_area_addr);
+        self.fetcher
+            .set_pallettes(self.pallettes.background_pallette);
+        self.fetcher.set_map_addr(self.bg_tile_map_addr);
+    }
+
     pub fn reset_x(&mut self) {
         self.x = 0;
     }
