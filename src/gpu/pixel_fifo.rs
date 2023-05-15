@@ -391,7 +391,7 @@ impl Fetcher {
         let mut i = 7;
         let mut l = 0;
         let mut return_data: [Option<PixelData>; 8] = [None; 8];
-        while i <= 0 {
+        while i >= 0 {
             // TODO: Check to make sure that data_0 is the 2nd significant digit
             let data = (((data_0 >> i) & 1) << 1) + ((data_1 >> i) & 1);
 
