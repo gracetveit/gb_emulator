@@ -83,51 +83,60 @@ use gpu::lcd::LCD;
 fn main() {
     let (request_sender, request_receiver) = channel::<Request>();
     // Create Memory Thread
-    thread::spawn(move || {
-        let mut memory = MemoryBus::new(request_receiver, String::from("hello-world.gb"));
-        loop {
-            memory.step();
-        }
-    });
+    let memory_thread = thread::Builder::new().name(String::from("Memory Thread"));
+    memory_thread
+        .spawn(move || {
+            let mut memory = MemoryBus::new(request_receiver, String::from("hello-world.gb"));
+            loop {
+                memory.step();
+            }
+        })
+        .unwrap();
     let (ppu_timing_sender, cpu_timing_receiver) = channel::<u8>();
     let (cpu_timing_sender, ppu_timing_receiver) = channel::<u8>();
     // Create CPU thread
     let cpu_request_sender = request_sender.clone();
-    thread::spawn(move || {
-        let mut cpu = CPU::new(cpu_request_sender);
-        let mut relative_t = 0;
-        loop {
-            if relative_t <= 0 {
-                let step_t = cpu.step();
-                relative_t += step_t as i32;
-                cpu_timing_sender.send(step_t).unwrap();
-            } else {
-                relative_t -= match cpu_timing_receiver.recv() {
-                    Ok(x) => x as i32,
-                    Err(e) => panic!("{e:}"),
+    let cpu_thread = thread::Builder::new().name(String::from("CPU Thread"));
+    cpu_thread
+        .spawn(move || {
+            let mut cpu = CPU::new(cpu_request_sender);
+            let mut relative_t = 0;
+            loop {
+                if relative_t <= 0 {
+                    let step_t = cpu.step();
+                    relative_t += step_t as i32;
+                    cpu_timing_sender.send(step_t).unwrap();
+                } else {
+                    relative_t -= match cpu_timing_receiver.recv() {
+                        Ok(x) => x as i32,
+                        Err(e) => panic!("{e:}"),
+                    }
                 }
+                // let relative_t = cpu.step();
             }
-            // let relative_t = cpu.step();
-        }
-    });
+        })
+        .unwrap();
     let (lcd_sender, lcd_receiver) = mpsc::channel::<[[[u8; 4]; 160]; 144]>();
     // Create PPU thread
-    thread::spawn(move || {
-        let mut ppu = GPU::new(request_sender, lcd_sender);
-        let mut relative_t = 0;
-        loop {
-            if relative_t <= 0 {
-                let step_t = ppu.step();
-                relative_t += step_t as i32;
-                ppu_timing_sender.send(step_t).unwrap();
-            } else {
-                relative_t -= match ppu_timing_receiver.recv() {
-                    Ok(x) => x as i32,
-                    Err(e) => panic!("{e:}"),
+    let ppu_thread = thread::Builder::new().name(String::from("PPU Thread"));
+    ppu_thread
+        .spawn(move || {
+            let mut ppu = GPU::new(request_sender, lcd_sender);
+            let mut relative_t = 0;
+            loop {
+                if relative_t <= 0 {
+                    let step_t = ppu.step();
+                    relative_t += step_t as i32;
+                    ppu_timing_sender.send(step_t).unwrap();
+                } else {
+                    relative_t -= match ppu_timing_receiver.recv() {
+                        Ok(x) => x as i32,
+                        Err(e) => panic!("{e:}"),
+                    }
                 }
             }
-        }
-    });
+        })
+        .unwrap();
     // Create LCD thread
     let event_loop = EventLoop::new();
     let mut input = WinitInputHelper::new();
