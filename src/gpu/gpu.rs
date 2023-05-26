@@ -27,7 +27,10 @@ pub struct GPU {
 }
 
 impl GPU {
-    pub fn new(request_sender: Sender<Request>, lcd_sender: Sender<Box<[[[u8; 4]; 160]; 144]>>) -> GPU {
+    pub fn new(
+        request_sender: Sender<Request>,
+        lcd_sender: Sender<Box<[[[u8; 4]; 160]; 144]>>,
+    ) -> GPU {
         let cloned_sender = request_sender.clone();
         let pallettes = PalletteCollection {
             background_pallette: Pallette::new(PalletteName::Background),
