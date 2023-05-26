@@ -16,11 +16,11 @@ const HEIGHT: u8 = 144;
 pub struct LCD {
     pixels: Pixels,
     i: usize,
-    receiver: Receiver<[[[u8; 4]; 160]; 144]>,
+    receiver: Receiver<Box<[[[u8; 4]; 160]; 144]>>,
 }
 
 impl LCD {
-    pub fn new(window: &Window, receiver: Receiver<[[[u8; 4]; 160]; 144]>) -> LCD {
+    pub fn new(window: &Window, receiver: Receiver<Box<[[[u8; 4]; 160]; 144]>>) -> LCD {
         let size = window.inner_size();
 
         let surface_texture = SurfaceTexture::new(size.width, size.height, window);
