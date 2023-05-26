@@ -19,7 +19,7 @@ pub struct GPU {
     fifo: PixelFIFO,
     pallettes: PalletteCollection,
     temp_lcd: [[[u8; 4]; 160]; 144],
-    lcd_sender: Sender<[[[u8; 4]; 160]; 144]>,
+    lcd_sender: Sender<Box<[[[u8; 4]; 160]; 144]>>,
     startup: bool,
     lcd_control_flags: LCDControlFlags,
     scroll: (u8, u8),
@@ -27,7 +27,7 @@ pub struct GPU {
 }
 
 impl GPU {
-    pub fn new(request_sender: Sender<Request>, lcd_sender: Sender<[[[u8; 4]; 160]; 144]>) -> GPU {
+    pub fn new(request_sender: Sender<Request>, lcd_sender: Sender<Box<[[[u8; 4]; 160]; 144]>>) -> GPU {
         let cloned_sender = request_sender.clone();
         let pallettes = PalletteCollection {
             background_pallette: Pallette::new(PalletteName::Background),
@@ -106,7 +106,7 @@ impl GPU {
                     self.line = 0;
                     self.mode = GPUMode::VBlank;
                     // TODO: Send temp_LCD to LCD
-                    self.lcd_sender.send(self.temp_lcd).unwrap();
+                    self.lcd_sender.send(Box::new(self.temp_lcd)).unwrap();
                 } else {
                     if self.startup {
                         self.startup = false;

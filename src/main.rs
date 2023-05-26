@@ -116,7 +116,7 @@ fn main() {
             }
         })
         .unwrap();
-    let (lcd_sender, lcd_receiver) = mpsc::channel::<[[[u8; 4]; 160]; 144]>();
+    let (lcd_sender, lcd_receiver) = mpsc::channel::<Box<[[[u8; 4]; 160]; 144]>>();
     // Create PPU thread
     let ppu_thread = thread::Builder::new().name(String::from("PPU Thread"));
     ppu_thread
