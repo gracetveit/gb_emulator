@@ -53,7 +53,7 @@ impl LCD {
                     }
                     // pixel = data[line][i % 160]
                     for x in 0..4 {
-                        pixel[x] = data[line][i & 160][x];
+                        pixel[x] = data[line][i % 160][x];
                     }
                     // TODO: Write out function that unwraps a Color to a [u8; 4]
                 }
