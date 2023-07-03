@@ -119,6 +119,7 @@ impl GPU {
                     self.mode = GPUMode::OAMRead;
                     self.fifo.inc_y();
                 }
+                self.set_lcd_y(self.line);
                 return 1;
             }
             GPUMode::VBlank => {
@@ -126,6 +127,7 @@ impl GPU {
                 if self.mode_clock >= 456 {
                     self.mode_clock = 0;
                     self.line += 1;
+                    self.set_lcd_y(self.line + 143);
 
                     if self.line == 10 {
                         // Restart scanning modes
@@ -139,8 +141,10 @@ impl GPU {
                         self.mode = GPUMode::OAMRead;
                         self.line = 0;
                         self.fifo.reset_y();
+                        self.set_lcd_y(0);
                     }
                 }
+                self.mode_clock += 1;
                 return 1;
             }
         }
@@ -293,6 +297,10 @@ impl GPU {
         self.fifo.set_scroll(self.scroll);
         self.fifo.reset_x();
         self.fifo.set_fetcher();
+    }
+
+    fn set_lcd_y(&self, y: u8) {
+        self.bus.write_byte(0xFF44, y);
     }
 
     // fn reset_tileset(&mut self) {
