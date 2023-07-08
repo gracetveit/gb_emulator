@@ -103,11 +103,11 @@ impl MemoryBus {
         while i < bios.len() {
             self.memory[i] = bios[i];
             i += 1;
-        };
+        }
         while i <= 0x3FFF && i < rom.len() {
             self.memory[i] = rom[i];
             i += 1;
-        };
+        }
     }
 
     fn disable_boot_rom(&mut self, rom: Vec<u8>) {
