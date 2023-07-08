@@ -34,13 +34,14 @@ pub struct MemoryBus {
 
 impl MemoryBus {
     pub fn new(request_receiver: Receiver<Request>, rom_name: String) -> MemoryBus {
-        let data = MemoryBus::read_data("gb_bios.bin");
+        let bios = MemoryBus::read_data("gb_bios.bin");
+        let rom = MemoryBus::read_data("hello-world.gb");
         let mut memory_bus = MemoryBus {
             memory: [0; 0x10000],
             request_receiver,
             rom_name,
         };
-        memory_bus.load_data(data);
+        memory_bus.load_initial_data(bios, rom);
         memory_bus
     }
 
@@ -59,7 +60,7 @@ impl MemoryBus {
                     }
                     RequestType::LoadROM => {
                         let data = MemoryBus::read_data(&self.rom_name);
-                        self.load_data(data);
+                        self.disable_boot_rom(data);
                         request.responder.send(Response::Ok204).unwrap();
                     }
                 }
@@ -97,10 +98,22 @@ impl MemoryBus {
         }
     }
 
-    fn load_data(&mut self, data: Vec<u8>) {
+    fn load_initial_data(&mut self, bios: Vec<u8>, rom: Vec<u8>) {
         let mut i = 0;
-        while i < data.len() {
-            self.memory[i] = data[i];
+        while i < bios.len() {
+            self.memory[i] = bios[i];
+            i += 1;
+        };
+        while i <= 0x3FFF && i < rom.len() {
+            self.memory[i] = rom[i];
+            i += 1;
+        };
+    }
+
+    fn disable_boot_rom(&mut self, rom: Vec<u8>) {
+        let mut i = 0;
+        while i < 256 {
+            self.memory[i] = rom[i];
             i += 1;
         }
     }
