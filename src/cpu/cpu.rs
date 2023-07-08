@@ -38,10 +38,6 @@ impl CPU {
     }
 
     pub fn step(&mut self) -> u8 {
-        if self.pc == 0x0100 {
-            self.bus.load_rom();
-        }
-
         let mut instruction_byte = self.bus.read_byte(self.pc);
         let prefixed = instruction_byte == 0xCB;
         let (mut toggle_interrupt, interrupt_state) = match self.interrupt {
@@ -65,6 +61,10 @@ impl CPU {
                 );
                 panic!("Unkown instruction found for: 0x{}", description);
             };
+
+        if self.pc == 0x00FE {
+            self.bus.load_rom();
+        }
 
         if toggle_interrupt {
             toggle_interrupt = match self.interrupt {
